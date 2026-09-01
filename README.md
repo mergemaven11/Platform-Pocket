@@ -7,7 +7,7 @@ Platform Pocket turns the Cardputer ADV into a tiny terminal-style companion for
 The project is intentionally built as both a **real tool** and a **learning project**: the code is heavily commented, features are added in architectural layers, and each section is designed to teach the ideas behind it — not just make the screen do something cool.
 
 <p align="center">
-  <img src="assets/platform-pocket-v0.4.jpg" alt="Platform Pocket v0.4 project overview" width="100%">
+  <img src="assets/platform-pocket-v0.5.png" alt="Platform Pocket v0.4 project overview" width="100%">
 </p>
 
 ---
