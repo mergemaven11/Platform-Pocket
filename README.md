@@ -4,7 +4,11 @@
 
 Platform Pocket turns the Cardputer ADV into a tiny terminal-style companion for learning and practicing **networking, embedded C++, platform engineering, security diagnostics, and systems thinking**.
 
-The project is intentionally built as both a **real tool** and a **learning project**: the code is heavily commented, features are added in small architectural layers, and each section is designed to teach the ideas behind it — not just make the screen do something cool.
+The project is intentionally built as both a **real tool** and a **learning project**: the code is heavily commented, features are added in architectural layers, and each section is designed to teach the ideas behind it — not just make the screen do something cool.
+
+<p align="center">
+  <img src="assets/platform-pocket-v0.4.jpg" alt="Platform Pocket v0.4 project overview" width="100%">
+</p>
 
 ---
 
@@ -170,6 +174,7 @@ Primary target:
 - Built-in display
 - Wi-Fi
 - SD-card expansion
+- GNSS / LoRa-capable expansion hardware
 
 ---
 
@@ -209,12 +214,37 @@ The repository keeps generated PlatformIO build files and editor caches out of G
 
 ---
 
+## 🚧 Next Step — SD Card Notes
+
+The next major implementation step is to turn the **Notes** section into a real persistent field notebook.
+
+The goal is for notes to survive reboots and power cycles by storing them on the microSD card instead of keeping them only in RAM.
+
+Planned implementation:
+
+- [ ] Initialize and verify the SD card at boot
+- [ ] Create `/platform_pocket/notes/` automatically
+- [ ] Add full Cardputer keyboard text entry
+- [ ] Save each note as a `.txt` file
+- [ ] Load and list existing notes
+- [ ] View saved notes on-device
+- [ ] Delete selected notes safely
+- [ ] Show SD-card capacity and storage status
+- [ ] Handle missing or unreadable SD cards gracefully
+
+### Why this is next
+
+Persistent notes are the first feature that connects several important embedded-development concepts at once: **filesystem I/O, keyboard input, state management, error handling, storage, and user-created data**.
+
+Once this works, Platform Pocket becomes much more than a menu demo — it becomes a device that can actually keep commands, troubleshooting findings, configs, reminders, and field notes with you.
+
+---
+
 ## 🗺️ Roadmap
 
 Planned next jumps include:
 
-- SD-card notes
-- Full Cardputer keyboard text entry
+- **v0.5:** SD-card notes + keyboard text entry
 - Signal monitor
 - DNS lookup
 - Network diagnostics
@@ -223,10 +253,11 @@ Planned next jumps include:
 - Subnet calculator
 - Base converter
 - Theme switching
-- Brightness controls
+- Interactive brightness controls
 - Wi-Fi profile management
 - Storage dashboard
 - Remote Docker host support
+- GNSS/LoRa integration experiments
 - Better internal docs under `docs/`
 
 ---
