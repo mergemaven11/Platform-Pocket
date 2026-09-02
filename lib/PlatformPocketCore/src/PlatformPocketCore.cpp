@@ -2,6 +2,11 @@
 
 #include "PlatformPocketCore.h"
 
+/**
+ * @file PlatformPocketCore.cpp
+ * @brief Implementations of hardware-independent Platform Pocket helpers.
+ */
+
 const char *getSignalLabel(int rssi)
 {
     if (rssi >= -50) return "STRONG";
