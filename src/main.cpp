@@ -5,8 +5,6 @@
 #include <mbedtls/sha256.h>
 #include "storage.h"
 #include "workstation.h"
-#include "workstation.h"
-#include "workstation.h"
 
 // ============================================================
 // PLATFORM POCKET v0.8
@@ -133,11 +131,7 @@ String previousTerminalCommand = "";
 String editorBuffer = "";
 const size_t EDITOR_MAX_CHARS = 1024;
 
-String editorBuffer = "";
-const size_t EDITOR_MAX_CHARS = 1024;
 
-String editorBuffer = "";
-const size_t EDITOR_MAX_CHARS = 1024;
 
 // Forward declarations for terminal field-tool helpers.
 String formatIpv4(uint32_t value);
@@ -663,56 +657,6 @@ void drawTerminal()
     M5Cardputer.Display.fillRect(224, 108, 5, 7, uiAccent);
 
     drawFooter("ENTER run   DEL edit   ESC back");
-}
-
-/** @brief Draw the full-screen Markdown note editor. */
-void drawEditor()
-{
-    drawHeader("MARKDOWN EDITOR", String(editorBuffer.length()) + "/" + EDITOR_MAX_CHARS);
-    M5Cardputer.Display.fillRect(5, 22, 230, 97, uiPanel);
-    M5Cardputer.Display.setTextColor(uiText);
-    M5Cardputer.Display.setTextSize(1);
-    M5Cardputer.Display.setCursor(8, 26);
-    String view = editorBuffer;
-    if (view.length() > 420)
-        view = view.substring(view.length() - 420);
-    M5Cardputer.Display.print(view);
-    drawFooter("ENTER save   ESC back   DEL erase");
-}
-
-/** @brief Open the persistent Markdown editor. */
-void openEditor()
-{
-    editorBuffer = PocketWorkstation::loadEditorNote();
-    if (editorBuffer.length() > EDITOR_MAX_CHARS)
-        editorBuffer = editorBuffer.substring(0, EDITOR_MAX_CHARS);
-    currentScreen = SCREEN_EDITOR;
-    drawEditor();
-}
-
-/** @brief Draw the full-screen Markdown note editor. */
-void drawEditor()
-{
-    drawHeader("MARKDOWN EDITOR", String(editorBuffer.length()) + "/" + EDITOR_MAX_CHARS);
-    M5Cardputer.Display.fillRect(5, 22, 230, 97, uiPanel);
-    M5Cardputer.Display.setTextColor(uiText);
-    M5Cardputer.Display.setTextSize(1);
-    M5Cardputer.Display.setCursor(8, 26);
-    String view = editorBuffer;
-    if (view.length() > 420)
-        view = view.substring(view.length() - 420);
-    M5Cardputer.Display.print(view);
-    drawFooter("ENTER save   ESC back   DEL erase");
-}
-
-/** @brief Open the persistent Markdown editor. */
-void openEditor()
-{
-    editorBuffer = PocketWorkstation::loadEditorNote();
-    if (editorBuffer.length() > EDITOR_MAX_CHARS)
-        editorBuffer = editorBuffer.substring(0, EDITOR_MAX_CHARS);
-    currentScreen = SCREEN_EDITOR;
-    drawEditor();
 }
 
 /** @brief Draw the full-screen Markdown note editor. */
