@@ -1,14 +1,23 @@
 #include <unity.h>
 #include <PlatformPocketCore.h>
 
+/**
+ * @brief Document setUp.
+ */
 void setUp()
 {
 }
 
+/**
+ * @brief Document tearDown.
+ */
 void tearDown()
 {
 }
 
+/**
+ * @brief Document test strong signal.
+ */
 void test_strong_signal()
 {
     TEST_ASSERT_EQUAL_STRING(
@@ -17,6 +26,9 @@ void test_strong_signal()
     );
 }
 
+/**
+ * @brief Document main.
+ */
 int main()
 {
     UNITY_BEGIN();

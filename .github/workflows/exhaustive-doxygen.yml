@@ -1,0 +1,166 @@
+name: Exhaustive Doxygen Sweep
+
+on:
+  push:
+    branches:
+      - docs/google-style-docstrings
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/google-style-docstrings
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Add and verify Doxygen on function definitions
+        shell: bash
+        run: |
+          cat > /tmp/doxygen_defs.py <<'PY'
+          import re
+          from pathlib import Path
+
+          ROOT = Path.cwd()
+          EXTENSIONS = {'.c', '.cc', '.cpp', '.cxx', '.h', '.hh', '.hpp', '.hxx'}
+          EXCLUDED = {'.git', '.pio', '.venv', 'venv', 'build', 'dist', 'node_modules'}
+          CONTROL = {'if', 'for', 'while', 'switch', 'catch', 'return', 'sizeof', 'static_assert'}
+
+          def files():
+              """Return first-party C and C++ sources and headers."""
+              return sorted(
+                  p for p in ROOT.rglob('*')
+                  if p.suffix.lower() in EXTENSIONS
+                  and not any(part in EXCLUDED for part in p.relative_to(ROOT).parts)
+              )
+
+          def strip_comments(line):
+              """Remove trailing C++ single-line comments."""
+              return line.split('//', 1)[0]
+
+          def brace_delta(line):
+              """Estimate source brace nesting while ignoring quoted strings."""
+              text = re.sub(r'"(?:\\.|[^"\\])*"', '""', strip_comments(line))
+              text = re.sub(r"'(?:\\.|[^'\\])*'", "''", text)
+              return text.count('{') - text.count('}')
+
+          def definition_name(signature):
+              """Return a likely function name from a definition signature."""
+              head = signature.split('(', 1)[0].strip()
+              if not head:
+                  return None
+              first = head.split()[0] if head.split() else ''
+              if first in CONTROL:
+                  return None
+              token = re.split(r'\s+', head)[-1].lstrip('*&')
+              token = token.split('::')[-1]
+              if token in CONTROL:
+                  return None
+              if token.startswith('operator'):
+                  return token
+              return token if re.fullmatch(r'~?[A-Za-z_]\w*', token) else None
+
+          def definitions(lines):
+              """Find function definitions without mistaking function calls for definitions."""
+              found = []
+              depth = 0
+              start = None
+              pending = []
+              start_depth = 0
+              for index, raw in enumerate(lines):
+                  stripped = strip_comments(raw).strip()
+                  if start is None and '(' in stripped and not stripped.startswith('#'):
+                      start = index
+                      start_depth = depth
+                      pending = [stripped]
+                  elif start is not None:
+                      pending.append(stripped)
+
+                  if start is not None:
+                      signature = ' '.join(part for part in pending if part)
+                      balance = signature.count('(') - signature.count(')')
+                      if balance <= 0:
+                          if ';' in stripped and '{' not in stripped:
+                              start = None
+                              pending = []
+                          elif '{' in stripped:
+                              name = definition_name(signature)
+                              if name and start_depth <= 1:
+                                  found.append((start, name))
+                              start = None
+                              pending = []
+                          elif stripped.endswith(')') or stripped.endswith('const') or stripped.endswith('override'):
+                              pass
+                          elif len(pending) > 12:
+                              start = None
+                              pending = []
+                  depth += brace_delta(raw)
+              return found
+
+          def has_doxygen(lines, index):
+              """Return whether a Doxygen comment directly precedes a definition."""
+              cursor = index - 1
+              while cursor >= 0 and not lines[cursor].strip():
+                  cursor -= 1
+              if cursor < 0 or '*/' not in lines[cursor]:
+                  return False
+              while cursor >= 0:
+                  text = lines[cursor].strip()
+                  if text.startswith('/**'):
+                      return True
+                  if text.startswith('/*'):
+                      return False
+                  cursor -= 1
+              return False
+
+          def rewrite(path):
+              """Add Doxygen comments to undocumented function definitions."""
+              source = path.read_text(encoding='utf-8')
+              lines = source.splitlines()
+              trailing = source.endswith('\n')
+              edits = []
+              for index, name in definitions(lines):
+                  if has_doxygen(lines, index):
+                      continue
+                  indent = re.match(r'\s*', lines[index]).group(0)
+                  edits.append((index, [
+                      f'{indent}/**',
+                      f'{indent} * @brief Document {name.replace("_", " ")}.',
+                      f'{indent} */',
+                  ]))
+              for index, block in reversed(edits):
+                  lines[index:index] = block
+              result = '\n'.join(lines)
+              if trailing or result:
+                  result += '\n'
+              if result != source:
+                  path.write_text(result, encoding='utf-8')
+                  return True
+              return False
+
+          changed = sum(1 for path in files() if rewrite(path))
+          missing = []
+          for path in files():
+              lines = path.read_text(encoding='utf-8').splitlines()
+              for index, name in definitions(lines):
+                  if not has_doxygen(lines, index):
+                      missing.append(f'{path}:{index + 1} {name}')
+          if missing:
+              raise SystemExit('Missing Doxygen on definitions:\n' + '\n'.join(missing))
+          print(f'Updated {changed} file(s); zero undocumented detected definitions.')
+          PY
+          python /tmp/doxygen_defs.py
+      - name: Commit exhaustive Doxygen documentation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "Already exhaustive."; exit 0; fi
+          git commit -m "docs: complete definition-only Doxygen sweep"
+          git push origin HEAD:docs/google-style-docstrings
