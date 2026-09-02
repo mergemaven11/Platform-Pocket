@@ -1,14 +1,32 @@
 # ⚡ Platform Pocket
 
-> A pocket-sized ESP32-S3 platform engineering toolkit for networking, security diagnostics, Docker reference tools, notes, and system utilities — built on the M5Stack Cardputer ADV.
+> A pocket-sized ESP32-S3 platform engineering toolkit for networking, security diagnostics, Docker reference tools, a local command console, notes, and system utilities — built for the M5Stack Cardputer ADV.
 
-Platform Pocket turns the Cardputer ADV into a tiny terminal-style companion for learning and practicing **networking, embedded C++, platform engineering, security diagnostics, and systems thinking**.
+Platform Pocket turns the Cardputer ADV into a compact handheld companion for **networking, embedded C++, platform engineering, security diagnostics, and systems work**.
 
-The project is intentionally built as both a **real tool** and a **learning project**: the code is heavily commented, features are added in architectural layers, and each section is designed to teach the ideas behind it — not just make the screen do something cool.
+The v0.5 refresh focuses on making the device feel like a real product instead of a firmware demo: a compact dashboard UI, consistent screen chrome, cleaner Wi-Fi views, live themes and brightness controls, and a keyboard-driven local terminal.
 
 <p align="center">
-  <img src="assets/Platform-pocket-v0.5.png" alt="Platform Pocket v0.4 project overview" width="100%">
+  <img src="assets/Platform-pocket-v0.5.png" alt="Platform Pocket project overview" width="100%">
 </p>
+
+---
+
+## ✨ v0.5 Highlights
+
+- Redesigned 240×135 handheld UI
+- Compact status/header/footer system
+- Filled selection panels instead of plain `>` text menus
+- First-class **Terminal** screen
+- Real Cardputer keyboard text entry
+- Local command parser with useful platform/network commands
+- Cleaner Wi-Fi scan results and network detail cards
+- Interactive brightness control
+- Three live UI themes:
+  - Midnight Cyan
+  - Matrix Green
+  - Amber Ops
+- Input handling now uses Cardputer keyboard change events to prevent repeated held-key input
 
 ---
 
@@ -35,7 +53,10 @@ Docker
  ├─ Docker Commands
  ├─ Container Cheatsheet
  ├─ Compose Cheatsheet
- └─ Remote Host      [later]
+ └─ Remote Host
+
+Terminal
+ └─ Local Platform Pocket shell
 
 Notes
  ├─ View Notes
@@ -43,7 +64,7 @@ Notes
  ├─ Delete Note
  └─ SD Storage
 
-Quick Tools
+Tools
  ├─ IP Tools
  ├─ Subnet Helper
  ├─ Base Converter
@@ -60,37 +81,92 @@ Settings
 
 ---
 
-## ✅ Current Features
+## 🖥️ Local Terminal
 
-### Network
+Terminal is now a real interactive screen using the Cardputer keyboard.
+
+Example:
+
+```text
+TERMINAL                         LOCAL
+
+Platform Pocket v0.5
+local command console ready
+type help for commands
+
+pocket> scan
+```
+
+### Commands
+
+| Command | Action |
+|---|---|
+| `help` | Show available commands |
+| `clear` / `cls` | Clear terminal output |
+| `wifi` | Show connection and signal information |
+| `scan` | Scan nearby Wi-Fi networks |
+| `ip` | Show local IP and gateway |
+| `sysinfo` / `free` | CPU, heap, and flash information |
+| `uptime` | Show device uptime |
+| `docker` | Quick Docker / Compose reference |
+| `history` | Show recent command information |
+| `version` | Show Platform Pocket version |
+| `echo TEXT` | Print text back to the console |
+| `ssh` | Reserved for the upcoming remote SSH transport |
+
+The local console is intentionally separate from Linux/Bash. The ESP32-S3 is not itself a Linux machine. A real remote SSH client is a future transport layer so Platform Pocket can become a pocket terminal for Linux hosts.
+
+---
+
+## 📡 Network Features
+
 - Nearby Wi-Fi scanning
 - Signal strength (RSSI)
 - Channel display
 - Open-network detection
 - Duplicate SSID observations
+- Hidden SSID handling
 - Per-network detail view
-- Local Wi-Fi/MAC information
+- Local Wi-Fi / MAC information
+- Terminal-based `scan`, `wifi`, and `ip` commands
 
-### Security
-- Defensive Wi-Fi observation dashboard
-- Open/hidden/duplicate SSID summaries
+---
+
+## 🛡️ Security Features
+
+- Passive Wi-Fi observation dashboard
+- Open / hidden / duplicate SSID summaries
 - Device information
-- Security-focused tools planned around diagnostics and user-owned systems
+- Defensive wording: scan observations are not treated as proof of malicious activity
+- Hashing and authorized host port checks remain on the roadmap
 
-### Docker
+---
+
+## 🐳 Docker Tools
+
 - Docker command reference
 - Container concepts cheatsheet
 - Docker Compose cheatsheet
-- Remote-host management planned for later
+- Docker shortcuts inside the local terminal
+- Remote Linux / Docker host control planned for a later release
 
-### Quick Tools
-- Password generator
-- ESP32/system information
-- IP, subnet, and base-conversion tools planned
+---
 
-### Notes + Settings
-- Menu architecture is in place
-- SD-card notes, keyboard text entry, theme control, storage info, and richer settings are coming next
+## 🎨 UI + Settings
+
+### Themes
+
+Platform Pocket v0.5 includes three live themes:
+
+- **Midnight Cyan** — default dark ops UI
+- **Matrix Green** — classic terminal look
+- **Amber Ops** — warm retro terminal palette
+
+Choose **Settings → Theme** and press `Enter` to cycle themes.
+
+### Brightness
+
+Choose **Settings → Brightness** and adjust the display live with `;` and `.`.
 
 ---
 
@@ -98,69 +174,47 @@ Settings
 
 | Key | Action |
 |---|---|
-| `;` | Move up |
-| `.` | Move down |
-| `Enter` | Select / open |
+| `;` | Move up / decrease brightness |
+| `.` | Move down / increase brightness |
+| `Enter` | Select, open, or execute terminal command |
+| `Backspace / Del` | Edit terminal input |
 | `Fn + \`` | Back / Escape |
 
-The control scheme uses the physical Cardputer keyboard positions that have proven reliable during development.
-
----
-
-## 🧠 Built to Teach
-
-Platform Pocket is intentionally documented for learning.
-
-The code explains concepts like:
-
-- C++ arrays
-- `enum` values
-- `switch` statements
-- functions
-- references
-- state machines
-- menu routing
-- ESP32 Wi-Fi APIs
-- RSSI and wireless channels
-- program state
-- display rendering
-- input handling
-
-The goal is to be able to open the source months later and still understand **what the code is doing and why it was designed that way**.
+Terminal typing uses the Cardputer keyboard's native `KeysState.word`, delete/backspace, Enter, and Escape handling.
 
 ---
 
 ## 🏗️ Architecture
 
-Platform Pocket is moving toward a simple state-machine architecture:
+Platform Pocket uses a state-machine style UI:
 
 ```text
-Keyboard Input
-      ↓
-    loop()
-      ↓
-Screen State
-      ↓
-Menu Router
-      ↓
-Tool Function
-      ↓
-Display Output
+Cardputer keyboard
+       ↓
+Keyboard change event
+       ↓
+     loop()
+       ↓
+ ScreenState router
+       ↓
+┌───────────────┬─────────────┬──────────────┐
+│ menu screens  │ tool pages  │ terminal     │
+└───────────────┴─────────────┴──────────────┘
+       ↓
+M5Cardputer display
 ```
 
-Instead of using mystery numbers like:
+Readable states include:
 
 ```cpp
-currentScreen = 3;
+SCREEN_MAIN
+SCREEN_SECTION_MENU
+SCREEN_WIFI_SCAN
+SCREEN_WIFI_DETAILS
+SCREEN_TERMINAL
+SCREEN_BRIGHTNESS
+SCREEN_THEME
 ```
-
-Platform Pocket uses readable states such as:
-
-```cpp
-currentScreen = SCREEN_WIFI_DETAILS;
-```
-
-That makes the firmware easier to learn, debug, and extend.
 
 ---
 
@@ -170,8 +224,8 @@ Primary target:
 
 - **M5Stack Cardputer ADV**
 - ESP32-S3
-- Built-in keyboard
-- Built-in display
+- Built-in physical keyboard
+- 240×135 display
 - Wi-Fi
 - SD-card expansion
 - GNSS / LoRa-capable expansion hardware
@@ -183,121 +237,66 @@ Primary target:
 - C++
 - Arduino framework
 - PlatformIO
+- M5Cardputer / M5Unified / M5GFX
 - VS Code
-- M5Cardputer library
 - Git + GitHub
-- GitLens for code-history exploration
 
 ---
 
 ## 🚀 Build
 
-This project uses PlatformIO.
-
-Typical workflow:
-
-```text
-Edit code
-   ↓
-Build
-   ↓
-Upload
-   ↓
-Test on Cardputer
-   ↓
-Commit
-   ↓
-Push to GitHub
+```bash
+pio run
 ```
 
-The repository keeps generated PlatformIO build files and editor caches out of Git via `.gitignore`.
+Upload to the configured Cardputer ADV:
 
----
+```bash
+pio run --target upload
+```
 
-## 🚧 Next Step — SD Card Notes
+Serial monitor:
 
-The next major implementation step is to turn the **Notes** section into a real persistent field notebook.
+```bash
+pio device monitor
+```
 
-The goal is for notes to survive reboots and power cycles by storing them on the microSD card instead of keeping them only in RAM.
-
-Planned implementation:
-
-- [ ] Initialize and verify the SD card at boot
-- [ ] Create `/platform_pocket/notes/` automatically
-- [ ] Add full Cardputer keyboard text entry
-- [ ] Save each note as a `.txt` file
-- [ ] Load and list existing notes
-- [ ] View saved notes on-device
-- [ ] Delete selected notes safely
-- [ ] Show SD-card capacity and storage status
-- [ ] Handle missing or unreadable SD cards gracefully
-
-### Why this is next
-
-Persistent notes are the first feature that connects several important embedded-development concepts at once: **filesystem I/O, keyboard input, state management, error handling, storage, and user-created data**.
-
-Once this works, Platform Pocket becomes much more than a menu demo — it becomes a device that can actually keep commands, troubleshooting findings, configs, reminders, and field notes with you.
+The current `platformio.ini` targets the ESP32-S3 Cardputer ADV environment.
 
 ---
 
 ## 🗺️ Roadmap
 
-Planned next jumps include:
+### Next
 
-- **v0.5:** SD-card notes + keyboard text entry
-- Signal monitor
-- DNS lookup
-- Network diagnostics
-- SHA-256 hash tool
-- Defensive port checker for user-owned/administered hosts
+- Real remote SSH transport
+- Saved Wi-Fi profiles
+- SD-backed notes + note editor
+- Live RSSI signal graph
+- DNS lookup with keyboard entry
+
+### Later
+
+- SHA-256 hashing
+- Authorized-host port diagnostics
 - Subnet calculator
-- Base converter
-- Theme switching
-- Interactive brightness controls
-- Wi-Fi profile management
-- Storage dashboard
-- Remote Docker host support
-- GNSS/LoRa integration experiments
-- Better internal docs under `docs/`
+- Decimal / binary / hex converter
+- Saved remote hosts
+- Better storage manager
+- Optional LoRa / GNSS integrations
 
 ---
 
-## 🛡️ Security Philosophy
+## ⚠️ Security Philosophy
 
-Platform Pocket is intended for **defensive diagnostics, learning, and systems you own or administer**.
+Platform Pocket is designed for **learning, diagnostics, and systems you own or are authorized to administer**.
 
-Wireless observations such as duplicate SSIDs, hidden networks, or signal changes are treated as **informational indicators**, not proof of malicious activity.
-
-The project is not intended to include disruptive wireless attacks, credential theft, jamming, or unauthorized access tooling.
-
----
-
-## 📚 Project Goal
-
-The bigger idea behind Platform Pocket is simple:
-
-> Carry a tiny platform-engineering lab in your pocket.
-
-Something you can use to inspect a network, review commands, learn C++, experiment with ESP32 hardware, take notes, and gradually turn into a genuinely useful field companion.
+Wireless scan information is presented as observations. Duplicate names, open networks, hidden SSIDs, or unusual signal levels alone are not treated as proof that a network is malicious.
 
 ---
 
 ## 📌 Status
 
-**Early development — v0.x**
+**Platform Pocket v0.5 is an active development build.**
 
-Core menu architecture and the first real networking/security utilities are being built now.
-
-Expect frequent changes while the project grows. ⚙️📡
-
----
-
-## 🤝 Contributions
-
-This is currently a personal learning/build project, but ideas, issues, and thoughtful suggestions are welcome.
-
----
-
-## 📄 License
-
-No license has been selected yet.
+The redesigned UI and local terminal are implemented. Hardware flashing/testing on the target Cardputer ADV is the next validation step before merging the refresh into `main`.
