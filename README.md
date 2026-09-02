@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **Proprietary software — copying prohibited.** This source is public for portfolio review and evaluation only. Copying, modification, redistribution, commercial use, rehosting, derivative works, and AI/ML training use are prohibited without prior written permission. See [LICENSE](LICENSE).
+
 # ⚡ Platform Pocket
 
 > A pocket-sized ESP32-S3 platform engineering toolkit for networking, security diagnostics, Docker reference tools, a local command console, notes, and system utilities — built for the M5Stack Cardputer ADV.
