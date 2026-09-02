@@ -125,6 +125,19 @@ int terminalLineCount = 0;
 String lastTerminalCommand = "";
 String previousTerminalCommand = "";
 
+// Forward declarations for terminal field-tool helpers.
+String formatIpv4(uint32_t value);
+String toBinary(uint32_t value);
+String sha256Text(const String &value);
+void showSignalMonitor();
+void showNetworkTools();
+void showHashToolHelp();
+void showPortCheckHelp();
+void showIpTools();
+void showSubnetHelper();
+void showBaseConverter();
+void showStorageInfo();
+
 /**
  * @brief Document applyTheme.
  */
