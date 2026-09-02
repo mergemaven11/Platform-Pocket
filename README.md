@@ -12,6 +12,22 @@ The v0.5 refresh focuses on making the device feel like a real product instead o
 
 ---
 
+## 📚 Learn How It Works
+
+The detailed learning notes now live in [`/docs`](docs/README.md), so the firmware can stay readable without losing the explanations behind it.
+
+Recommended order:
+
+1. [`docs/architecture.md`](docs/architecture.md) — state machine, menus, routing, data vs. state, and the full input-to-display flow
+2. [`docs/ui-and-input.md`](docs/ui-and-input.md) — 240×135 drawing, themes, keyboard events, `KeysState`, and screen ownership
+3. [`docs/terminal.md`](docs/terminal.md) — how the local REPL works and how future SSH can fit into the same terminal UI
+4. [`docs/adding-a-tool.md`](docs/adding-a-tool.md) — step-by-step examples for adding static and interactive features
+5. [`docs/build-and-debug.md`](docs/build-and-debug.md) — PlatformIO, flashing, serial debugging, hardware validation, and debugging the state machine
+
+The docs are meant to be read alongside `src/main.cpp`: learn the concept in `/docs`, then find the real implementation in the firmware.
+
+---
+
 ## ✨ v0.5 Highlights
 
 - Redesigned 240×135 handheld UI
@@ -216,6 +232,8 @@ SCREEN_BRIGHTNESS
 SCREEN_THEME
 ```
 
+For the detailed walkthrough, see [`docs/architecture.md`](docs/architecture.md).
+
 ---
 
 ## 🧰 Hardware
@@ -261,7 +279,7 @@ Serial monitor:
 pio device monitor
 ```
 
-The current `platformio.ini` targets the ESP32-S3 Cardputer ADV environment.
+The current `platformio.ini` targets the ESP32-S3 Cardputer ADV environment. See [`docs/build-and-debug.md`](docs/build-and-debug.md) for the complete workflow and debugging guide.
 
 ---
 
