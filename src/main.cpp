@@ -122,6 +122,9 @@ String terminalLines[6];
 int terminalLineCount = 0;
 String lastTerminalCommand = "";
 
+/**
+ * @brief Document applyTheme.
+ */
 void applyTheme()
 {
     if (themeIndex == 0)
@@ -153,6 +156,9 @@ void applyTheme()
     }
 }
 
+/**
+ * @brief Document getThemeName.
+ */
 const char *getThemeName()
 {
     if (themeIndex == 0)
@@ -162,6 +168,9 @@ const char *getThemeName()
     return "AMBER OPS";
 }
 
+/**
+ * @brief Document drawHeader.
+ */
 void drawHeader(const String &title, const String &badge = "")
 {
     M5Cardputer.Display.fillScreen(uiBg);
@@ -184,6 +193,9 @@ void drawHeader(const String &title, const String &badge = "")
     }
 }
 
+/**
+ * @brief Document drawStatusHeader.
+ */
 void drawStatusHeader()
 {
     drawHeader("PLATFORM POCKET", String("v") + APP_VERSION);
@@ -195,6 +207,9 @@ void drawStatusHeader()
     M5Cardputer.Display.print(WiFi.status() == WL_CONNECTED ? "NET" : "OFF");
 }
 
+/**
+ * @brief Document drawFooter.
+ */
 void drawFooter(const String &hint)
 {
     M5Cardputer.Display.fillRect(0, 121, 240, 14, uiHeader);
@@ -205,6 +220,9 @@ void drawFooter(const String &hint)
     M5Cardputer.Display.print(hint);
 }
 
+/**
+ * @brief Document truncateText.
+ */
 String truncateText(const String &value, int maxChars)
 {
     if ((int)value.length() <= maxChars)
@@ -214,11 +232,17 @@ String truncateText(const String &value, int maxChars)
     return value.substring(0, maxChars - 3) + "...";
 }
 
+/**
+ * @brief Document getSectionTitle.
+ */
 const char *getSectionTitle()
 {
     return mainMenuItems[selectedMainItem];
 }
 
+/**
+ * @brief Document getCurrentSubMenu.
+ */
 const char **getCurrentSubMenu()
 {
     switch (selectedMainItem)
@@ -240,6 +264,9 @@ const char **getCurrentSubMenu()
     }
 }
 
+/**
+ * @brief Document getCurrentSubMenuCount.
+ */
 int getCurrentSubMenuCount()
 {
     switch (selectedMainItem)
@@ -261,6 +288,9 @@ int getCurrentSubMenuCount()
     }
 }
 
+/**
+ * @brief Document getSignalLabel.
+ */
 const char *getSignalLabel(int rssi)
 {
     if (rssi >= -50)
@@ -272,11 +302,17 @@ const char *getSignalLabel(int rssi)
     return "WEAK";
 }
 
+/**
+ * @brief Document wifiIsOpen.
+ */
 bool wifiIsOpen(int index)
 {
     return WiFi.encryptionType(index) == WIFI_AUTH_OPEN;
 }
 
+/**
+ * @brief Document hasDuplicateSSID.
+ */
 bool hasDuplicateSSID(int index)
 {
     String target = WiFi.SSID(index);
@@ -291,6 +327,9 @@ bool hasDuplicateSSID(int index)
     return false;
 }
 
+/**
+ * @brief Document drawMainMenu.
+ */
 void drawMainMenu()
 {
     drawStatusHeader();
@@ -336,6 +375,9 @@ void drawMainMenu()
     drawFooter(";/. move   ENTER open");
 }
 
+/**
+ * @brief Document drawSectionMenu.
+ */
 void drawSectionMenu()
 {
     drawHeader(String("< ") + getSectionTitle(), "TOOLS");
@@ -360,6 +402,9 @@ void drawSectionMenu()
     drawFooter(";/. move   ENTER open   ESC back");
 }
 
+/**
+ * @brief Document drawToolPage.
+ */
 void drawToolPage()
 {
     drawHeader(toolTitle, "INFO");
@@ -371,6 +416,9 @@ void drawToolPage()
     drawFooter("ESC back");
 }
 
+/**
+ * @brief Document openTool.
+ */
 void openTool(const String &title, const String &message)
 {
     toolTitle = title;
@@ -379,6 +427,9 @@ void openTool(const String &title, const String &message)
     drawToolPage();
 }
 
+/**
+ * @brief Document drawScanningScreen.
+ */
 void drawScanningScreen()
 {
     drawHeader("WI-FI SCANNER", "SCAN");
@@ -394,6 +445,9 @@ void drawScanningScreen()
     drawFooter("radio busy...");
 }
 
+/**
+ * @brief Document scanWifiNetworks.
+ */
 void scanWifiNetworks()
 {
     drawScanningScreen();
@@ -407,6 +461,9 @@ void scanWifiNetworks()
     currentScreen = SCREEN_WIFI_SCAN;
 }
 
+/**
+ * @brief Document drawWifiResults.
+ */
 void drawWifiResults()
 {
     drawHeader("WI-FI SCANNER", String(wifiNetworkCount) + " FOUND");
@@ -457,6 +514,9 @@ void drawWifiResults()
     drawFooter(";/. move  ENTER detail  ESC back");
 }
 
+/**
+ * @brief Document drawWifiDetails.
+ */
 void drawWifiDetails()
 {
     if (wifiNetworkCount <= 0)
@@ -518,6 +578,9 @@ void drawWifiDetails()
     drawFooter("ESC back");
 }
 
+/**
+ * @brief Document terminalClear.
+ */
 void terminalClear()
 {
     terminalLineCount = 0;
@@ -526,6 +589,9 @@ void terminalClear()
         terminalLines[i] = "";
 }
 
+/**
+ * @brief Document terminalPush.
+ */
 void terminalPush(const String &line)
 {
     if (terminalLineCount < 6)
@@ -539,6 +605,9 @@ void terminalPush(const String &line)
     terminalLines[5] = line;
 }
 
+/**
+ * @brief Document drawTerminal.
+ */
 void drawTerminal()
 {
     drawHeader("TERMINAL", "LOCAL");
@@ -564,6 +633,9 @@ void drawTerminal()
     drawFooter("ENTER run   DEL edit   ESC back");
 }
 
+/**
+ * @brief Document runTerminalCommand.
+ */
 void runTerminalCommand()
 {
     String command = terminalInput;
@@ -675,6 +747,9 @@ void runTerminalCommand()
     drawTerminal();
 }
 
+/**
+ * @brief Document openTerminal.
+ */
 void openTerminal()
 {
     currentScreen = SCREEN_TERMINAL;
@@ -687,6 +762,9 @@ void openTerminal()
     drawTerminal();
 }
 
+/**
+ * @brief Document drawBrightness.
+ */
 void drawBrightness()
 {
     drawHeader("BRIGHTNESS", String(screenBrightness));
@@ -700,12 +778,18 @@ void drawBrightness()
     drawFooter(";/. adjust   ESC back");
 }
 
+/**
+ * @brief Document openBrightness.
+ */
 void openBrightness()
 {
     currentScreen = SCREEN_BRIGHTNESS;
     drawBrightness();
 }
 
+/**
+ * @brief Document drawTheme.
+ */
 void drawTheme()
 {
     drawHeader("THEME", "LIVE");
@@ -722,12 +806,18 @@ void drawTheme()
     drawFooter("ENTER cycle   ESC back");
 }
 
+/**
+ * @brief Document openTheme.
+ */
 void openTheme()
 {
     currentScreen = SCREEN_THEME;
     drawTheme();
 }
 
+/**
+ * @brief Document showWifiInfo.
+ */
 void showWifiInfo()
 {
     WiFi.mode(WIFI_STA);
@@ -751,6 +841,9 @@ void showWifiInfo()
     openTool("WI-FI INFO", text);
 }
 
+/**
+ * @brief Document showSecurityDashboard.
+ */
 void showSecurityDashboard()
 {
     drawScanningScreen();
@@ -783,6 +876,9 @@ void showSecurityDashboard()
     openTool("SECURITY DASHBOARD", text);
 }
 
+/**
+ * @brief Document showDeviceInfo.
+ */
 void showDeviceInfo()
 {
     String text = String("Platform Pocket v") + APP_VERSION;
@@ -793,6 +889,9 @@ void showDeviceInfo()
     openTool("DEVICE INFO", text);
 }
 
+/**
+ * @brief Document showDockerCommands.
+ */
 void showDockerCommands()
 {
     String text = "docker ps\n  running containers";
@@ -802,6 +901,9 @@ void showDockerCommands()
     openTool("DOCKER COMMANDS", text);
 }
 
+/**
+ * @brief Document showContainerCheatsheet.
+ */
 void showContainerCheatsheet()
 {
     String text = "Container  running instance";
@@ -811,6 +913,9 @@ void showContainerCheatsheet()
     openTool("CONTAINERS 101", text);
 }
 
+/**
+ * @brief Document showComposeCheatsheet.
+ */
 void showComposeCheatsheet()
 {
     String text = "docker compose up -d";
@@ -820,6 +925,9 @@ void showComposeCheatsheet()
     openTool("COMPOSE", text);
 }
 
+/**
+ * @brief Document showPasswordGenerator.
+ */
 void showPasswordGenerator()
 {
     const char characters[] =
@@ -838,6 +946,9 @@ void showPasswordGenerator()
     openTool("PASSWORD GENERATOR", String("Generated:\n\n") + password + "\n\n16 characters");
 }
 
+/**
+ * @brief Document showSystemInfo.
+ */
 void showSystemInfo()
 {
     String text = "CPU: " + String(getCpuFrequencyMhz()) + " MHz";
@@ -848,6 +959,9 @@ void showSystemInfo()
     openTool("SYSTEM INFO", text);
 }
 
+/**
+ * @brief Document showAbout.
+ */
 void showAbout()
 {
     String text = String("Platform Pocket v") + APP_VERSION;
@@ -858,6 +972,9 @@ void showAbout()
     openTool("ABOUT", text);
 }
 
+/**
+ * @brief Document executeSelectedTool.
+ */
 void executeSelectedTool()
 {
     int option = selectedSubItem[selectedMainItem];
@@ -985,6 +1102,9 @@ void executeSelectedTool()
     }
 }
 
+/**
+ * @brief Document setup.
+ */
 void setup()
 {
     auto cfg = M5.config();
@@ -995,6 +1115,9 @@ void setup()
     drawMainMenu();
 }
 
+/**
+ * @brief Document loop.
+ */
 void loop()
 {
     M5Cardputer.update();
