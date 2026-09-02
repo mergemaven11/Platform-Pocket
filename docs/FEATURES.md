@@ -4,7 +4,7 @@ Platform Pocket is a handheld ESP32-S3 toolkit built for quick networking, secur
 
 This page explains every user-facing feature in the current menu: **what it is, what it does, why it exists, and whether it is available today**.
 
-> **Status key:** ✅ Available in v0.6 · 🧭 Planned / placeholder
+> **Status key:** ✅ Available in v0.7 · 🧭 Planned / placeholder
 
 ---
 
@@ -250,6 +250,36 @@ base 255
 
 **Why it matters:** This is a quick health check for both connectivity and firmware memory pressure. It is particularly useful when tracking down instability on an embedded device.
 
+### `sd` — ✅ Available
+
+**What it does:** Shows the mounted microSD card type, total capacity, used space, free space, and the `/platform-pocket` workspace root.
+
+**Why it matters:** Persistent features are only useful if the operator can confirm that removable storage is actually mounted and healthy.
+
+### `workspace` — ✅ Available
+
+**What it does:** Shows the standard Platform Pocket SD workspace directories for notes, incidents, diagnostics, logs, runbooks, snippets, profiles, exports, and config.
+
+**Why it matters:** A stable filesystem contract keeps future features organized and makes the card easy to inspect from another computer.
+
+### `note TEXT` — ✅ Available
+
+**What it does:** Appends a persistent Markdown quick note to `/platform-pocket/notes/inbox.md`.
+
+**Why it matters:** Troubleshooting observations can survive reboot and remain readable without proprietary software. v0.7 timestamps quick notes with device uptime rather than wall-clock time.
+
+### `notes` — ✅ Available
+
+**What it does:** Reports the persistent notes inbox location and current file size.
+
+**Why it matters:** It gives a fast confirmation that notes exist and are being stored on the SD workspace.
+
+### `snapshot` — ✅ Available
+
+**What it does:** Saves a numbered diagnostic text file under `/platform-pocket/diagnostics/` containing device health and current network state.
+
+**Why it matters:** A durable point-in-time record makes later comparison, incident documentation, and troubleshooting much more reliable than memory or screenshots.
+
 ### `sysinfo` / `free` — ✅ Available
 
 **What it does:** Displays system/runtime information such as CPU and memory data.
@@ -284,37 +314,37 @@ base 255
 
 ## Notes
 
-### View Notes — 🧭 Planned
+### View Notes — ✅ Available
 
-**What it is:** A planned reader for notes saved on removable storage.
+**What it is:** A persistent quick-note inbox backed by the microSD workspace.
 
-**What it will do:** Display notes stored on the device/SD card.
+**What it does:** Shows the current notes inbox path and size. Quick notes are stored as ordinary Markdown in `/platform-pocket/notes/inbox.md`.
 
-**Why it matters:** A field device is more useful when it can carry runbooks, IP plans, incident notes, command snippets, and troubleshooting checklists without needing a network connection.
+**Why it matters:** Field observations now survive reboot and can be opened later on a computer without conversion or a proprietary format.
 
-### New Note — 🧭 Planned
+### New Note — ✅ Available
 
-**What it is:** A planned keyboard-driven note editor.
+**What it is:** The first persistent note-capture workflow.
 
-**What it will do:** Let the user create notes directly from the Cardputer keyboard.
+**What it does:** The Notes menu explains the live `note TEXT` Terminal workflow, which appends the note to the SD-backed Markdown inbox.
 
-**Why it matters:** This would allow Platform Pocket to capture information during an incident, site visit, lab session, or troubleshooting task instead of being read-only.
+**Why it matters:** Platform Pocket can now capture troubleshooting observations instead of functioning only as a read-only utility. A full-screen note editor remains a future UX upgrade.
 
 ### Delete Note — 🧭 Planned
 
-**What it is:** Planned note-file management.
+**What it is:** Planned note-file lifecycle management with an explicit confirmation flow.
 
-**What it will do:** Remove saved notes from local/SD storage.
+**What it will do:** Safely remove saved notes from the SD workspace.
 
-**Why it matters:** Notes need lifecycle management if the device is going to function as a real portable notebook rather than a static reference viewer.
+**Why it matters:** Destructive operations should not be added until the small-screen UI can make deletion deliberate and recoverable enough for field use.
 
-### SD Storage — 🧭 Planned
+### SD Storage — ✅ Available
 
-**What it is:** Planned SD-card status and file information.
+**What it is:** Live microSD capacity and workspace health.
 
-**What it will do:** Show capacity, available space, and note/file information stored on the SD card.
+**What it does:** Shows card type, total capacity, used space, free space, and the `/platform-pocket` root. The same information is available through the `sd` command.
 
-**Why it matters:** Once notes and other persistent data use removable storage, the operator needs visibility into whether the card is mounted and how much space remains.
+**Why it matters:** The operator can verify that a large card such as a 64 GB microSD is mounted and available before depending on persistent notes or diagnostics. Platform Pocket never auto-formats a card.
 
 ---
 
@@ -390,11 +420,11 @@ base 255
 
 ### Storage — ✅ Available
 
-**What it is:** Internal flash and memory-health information.
+**What it is:** Combined removable-storage and runtime memory health.
 
-**What it does:** Shows flash size, sketch size, remaining sketch space, free heap, and minimum free heap.
+**What it does:** Shows the mounted microSD card capacity/usage and current heap information. The SD workspace is optional, so the page reports an offline state rather than preventing Platform Pocket from booting when a card is absent.
 
-**Why it matters:** Embedded systems have tight resource limits. This page makes those limits visible so firmware growth, memory pressure, and available update space can be monitored directly on the device.
+**Why it matters:** v0.7 introduces persistent data, so storage health is now part of operational health alongside embedded memory pressure.
 
 ### About — ✅ Available
 
