@@ -122,6 +122,9 @@ String terminalLines[6];
 int terminalLineCount = 0;
 String lastTerminalCommand = "";
 
+/**
+ * @brief Handle applyTheme.
+ */
 void applyTheme()
 {
     if (themeIndex == 0)
@@ -153,6 +156,9 @@ void applyTheme()
     }
 }
 
+/**
+ * @brief Handle getThemeName.
+ */
 const char *getThemeName()
 {
     if (themeIndex == 0)
@@ -162,6 +168,9 @@ const char *getThemeName()
     return "AMBER OPS";
 }
 
+/**
+ * @brief Handle drawHeader.
+ */
 void drawHeader(const String &title, const String &badge = "")
 {
     M5Cardputer.Display.fillScreen(uiBg);
@@ -184,8 +193,14 @@ void drawHeader(const String &title, const String &badge = "")
     }
 }
 
+/**
+ * @brief Handle drawStatusHeader.
+ */
 void drawStatusHeader()
 {
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader("PLATFORM POCKET", String("v") + APP_VERSION);
 
     uint16_t dotColor = WiFi.status() == WL_CONNECTED ? uiSuccess : uiMuted;
@@ -195,6 +210,9 @@ void drawStatusHeader()
     M5Cardputer.Display.print(WiFi.status() == WL_CONNECTED ? "NET" : "OFF");
 }
 
+/**
+ * @brief Handle drawFooter.
+ */
 void drawFooter(const String &hint)
 {
     M5Cardputer.Display.fillRect(0, 121, 240, 14, uiHeader);
@@ -205,6 +223,9 @@ void drawFooter(const String &hint)
     M5Cardputer.Display.print(hint);
 }
 
+/**
+ * @brief Handle truncateText.
+ */
 String truncateText(const String &value, int maxChars)
 {
     if ((int)value.length() <= maxChars)
@@ -214,11 +235,17 @@ String truncateText(const String &value, int maxChars)
     return value.substring(0, maxChars - 3) + "...";
 }
 
+/**
+ * @brief Handle getSectionTitle.
+ */
 const char *getSectionTitle()
 {
     return mainMenuItems[selectedMainItem];
 }
 
+/**
+ * @brief Handle getCurrentSubMenu.
+ */
 const char **getCurrentSubMenu()
 {
     switch (selectedMainItem)
@@ -240,6 +267,9 @@ const char **getCurrentSubMenu()
     }
 }
 
+/**
+ * @brief Handle getCurrentSubMenuCount.
+ */
 int getCurrentSubMenuCount()
 {
     switch (selectedMainItem)
@@ -261,6 +291,9 @@ int getCurrentSubMenuCount()
     }
 }
 
+/**
+ * @brief Handle getSignalLabel.
+ */
 const char *getSignalLabel(int rssi)
 {
     if (rssi >= -50)
@@ -272,11 +305,17 @@ const char *getSignalLabel(int rssi)
     return "WEAK";
 }
 
+/**
+ * @brief Handle wifiIsOpen.
+ */
 bool wifiIsOpen(int index)
 {
     return WiFi.encryptionType(index) == WIFI_AUTH_OPEN;
 }
 
+/**
+ * @brief Handle hasDuplicateSSID.
+ */
 bool hasDuplicateSSID(int index)
 {
     String target = WiFi.SSID(index);
@@ -291,8 +330,14 @@ bool hasDuplicateSSID(int index)
     return false;
 }
 
+/**
+ * @brief Handle drawMainMenu.
+ */
 void drawMainMenu()
 {
+    /**
+     * @brief Handle drawStatusHeader.
+     */
     drawStatusHeader();
 
     const int rowHeight = 19;
@@ -333,11 +378,20 @@ void drawMainMenu()
         M5Cardputer.Display.print(mainMenuTags[item]);
     }
 
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter(";/. move   ENTER open");
 }
 
+/**
+ * @brief Handle drawSectionMenu.
+ */
 void drawSectionMenu()
 {
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader(String("< ") + getSectionTitle(), "TOOLS");
 
     const char **menu = getCurrentSubMenu();
@@ -357,30 +411,54 @@ void drawSectionMenu()
         M5Cardputer.Display.print(menu[i]);
     }
 
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter(";/. move   ENTER open   ESC back");
 }
 
+/**
+ * @brief Handle drawToolPage.
+ */
 void drawToolPage()
 {
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader(toolTitle, "INFO");
     M5Cardputer.Display.fillRect(5, 24, 230, 91, uiPanel);
     M5Cardputer.Display.setTextColor(uiText);
     M5Cardputer.Display.setTextSize(1);
     M5Cardputer.Display.setCursor(10, 29);
     M5Cardputer.Display.println(toolMessage);
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter("ESC back");
 }
 
+/**
+ * @brief Handle openTool.
+ */
 void openTool(const String &title, const String &message)
 {
     toolTitle = title;
     toolMessage = message;
     currentScreen = SCREEN_TOOL;
+    /**
+     * @brief Handle drawToolPage.
+     */
     drawToolPage();
 }
 
+/**
+ * @brief Handle drawScanningScreen.
+ */
 void drawScanningScreen()
 {
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader("WI-FI SCANNER", "SCAN");
     M5Cardputer.Display.fillRect(12, 38, 216, 55, uiPanel);
     M5Cardputer.Display.setTextColor(uiAccent);
@@ -391,14 +469,26 @@ void drawScanningScreen()
     M5Cardputer.Display.setTextColor(uiMuted);
     M5Cardputer.Display.setCursor(45, 77);
     M5Cardputer.Display.print("nearby access points");
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter("radio busy...");
 }
 
+/**
+ * @brief Handle scanWifiNetworks.
+ */
 void scanWifiNetworks()
 {
+    /**
+     * @brief Handle drawScanningScreen.
+     */
     drawScanningScreen();
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
+    /**
+     * @brief Handle delay.
+     */
     delay(150);
     WiFi.scanDelete();
     wifiNetworkCount = WiFi.scanNetworks(false, true);
@@ -407,8 +497,14 @@ void scanWifiNetworks()
     currentScreen = SCREEN_WIFI_SCAN;
 }
 
+/**
+ * @brief Handle drawWifiResults.
+ */
 void drawWifiResults()
 {
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader("WI-FI SCANNER", String(wifiNetworkCount) + " FOUND");
 
     if (wifiNetworkCount <= 0)
@@ -420,6 +516,9 @@ void drawWifiResults()
         M5Cardputer.Display.setTextColor(uiMuted);
         M5Cardputer.Display.setCursor(37, 70);
         M5Cardputer.Display.print("ENTER to scan again");
+        /**
+         * @brief Handle drawFooter.
+         */
         drawFooter("ENTER rescan   ESC back");
         return;
     }
@@ -454,14 +553,23 @@ void drawWifiResults()
         M5Cardputer.Display.print(wifiIsOpen(i) ? "  OPEN" : "  LOCK");
     }
 
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter(";/. move  ENTER detail  ESC back");
 }
 
+/**
+ * @brief Handle drawWifiDetails.
+ */
 void drawWifiDetails()
 {
     if (wifiNetworkCount <= 0)
         return;
 
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader("NETWORK DETAIL", String(selectedWifiNetwork + 1) + "/" + String(wifiNetworkCount));
     M5Cardputer.Display.fillRect(5, 24, 230, 91, uiPanel);
 
@@ -515,9 +623,15 @@ void drawWifiDetails()
     M5Cardputer.Display.setCursor(58, 105);
     M5Cardputer.Display.print(hasDuplicateSSID(selectedWifiNetwork) ? "YES" : "NO");
 
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter("ESC back");
 }
 
+/**
+ * @brief Handle terminalClear.
+ */
 void terminalClear()
 {
     terminalLineCount = 0;
@@ -526,6 +640,9 @@ void terminalClear()
         terminalLines[i] = "";
 }
 
+/**
+ * @brief Handle terminalPush.
+ */
 void terminalPush(const String &line)
 {
     if (terminalLineCount < 6)
@@ -539,8 +656,14 @@ void terminalPush(const String &line)
     terminalLines[5] = line;
 }
 
+/**
+ * @brief Handle drawTerminal.
+ */
 void drawTerminal()
 {
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader("TERMINAL", "LOCAL");
     M5Cardputer.Display.fillRect(4, 23, 232, 78, uiPanel);
 
@@ -561,9 +684,15 @@ void drawTerminal()
     M5Cardputer.Display.print(truncateText(terminalInput, 27));
     M5Cardputer.Display.fillRect(224, 108, 5, 7, uiAccent);
 
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter("ENTER run   DEL edit   ESC back");
 }
 
+/**
+ * @brief Handle runTerminalCommand.
+ */
 void runTerminalCommand()
 {
     String command = terminalInput;
@@ -572,11 +701,17 @@ void runTerminalCommand()
 
     if (command.length() == 0)
     {
+        /**
+         * @brief Handle drawTerminal.
+         */
         drawTerminal();
         return;
     }
 
     lastTerminalCommand = command;
+    /**
+     * @brief Handle terminalPush.
+     */
     terminalPush(String("> ") + command);
 
     String lower = command;
@@ -584,12 +719,24 @@ void runTerminalCommand()
 
     if (lower == "help" || lower == "?")
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("help clear wifi scan ip");
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("sysinfo uptime docker history");
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("version ssh");
     }
     else if (lower == "clear" || lower == "cls")
     {
+        /**
+         * @brief Handle terminalClear.
+         */
         terminalClear();
     }
     else if (lower == "wifi")
@@ -606,10 +753,19 @@ void runTerminalCommand()
     }
     else if (lower == "scan")
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("scanning...");
+        /**
+         * @brief Handle drawTerminal.
+         */
         drawTerminal();
         WiFi.mode(WIFI_STA);
         int found = WiFi.scanNetworks(false, true);
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(String("found: ") + found + " networks");
         int showCount = found < 2 ? found : 2;
         for (int i = 0; i < showCount; i++)
@@ -635,60 +791,123 @@ void runTerminalCommand()
     }
     else if (lower == "sysinfo" || lower == "free")
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(String("cpu: ") + getCpuFrequencyMhz() + " MHz");
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(String("heap: ") + ESP.getFreeHeap() + " bytes");
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(String("flash: ") + ESP.getFlashChipSize() + " bytes");
     }
     else if (lower == "uptime")
     {
         unsigned long seconds = millis() / 1000UL;
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(String("uptime: ") + seconds + " sec");
     }
     else if (lower == "docker")
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("docker ps | images | logs");
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("compose up -d | ps | down");
     }
     else if (lower == "history")
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(lastTerminalCommand.length() ? String("last: ") + lastTerminalCommand : "history empty");
     }
     else if (lower == "version")
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(String("Platform Pocket v") + APP_VERSION);
     }
     else if (lower.startsWith("echo "))
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(command.substring(5));
     }
     else if (lower == "ssh" || lower.startsWith("ssh "))
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("! SSH transport not enabled yet");
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("local shell is active");
     }
     else
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(String("! unknown: ") + command);
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("type help");
     }
 
+    /**
+     * @brief Handle drawTerminal.
+     */
     drawTerminal();
 }
 
+/**
+ * @brief Handle openTerminal.
+ */
 void openTerminal()
 {
     currentScreen = SCREEN_TERMINAL;
     if (terminalLineCount == 0)
     {
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush(String("Platform Pocket v") + APP_VERSION);
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("local command console ready");
+        /**
+         * @brief Handle terminalPush.
+         */
         terminalPush("type help for commands");
     }
+    /**
+     * @brief Handle drawTerminal.
+     */
     drawTerminal();
 }
 
+/**
+ * @brief Handle drawBrightness.
+ */
 void drawBrightness()
 {
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader("BRIGHTNESS", String(screenBrightness));
     M5Cardputer.Display.fillRect(12, 42, 216, 32, uiPanel);
     M5Cardputer.Display.fillRect(20, 54, 200, 9, uiPanelAlt);
@@ -697,17 +916,32 @@ void drawBrightness()
     M5Cardputer.Display.setTextColor(uiMuted);
     M5Cardputer.Display.setCursor(53, 87);
     M5Cardputer.Display.print("; darker   . brighter");
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter(";/. adjust   ESC back");
 }
 
+/**
+ * @brief Handle openBrightness.
+ */
 void openBrightness()
 {
     currentScreen = SCREEN_BRIGHTNESS;
+    /**
+     * @brief Handle drawBrightness.
+     */
     drawBrightness();
 }
 
+/**
+ * @brief Handle drawTheme.
+ */
 void drawTheme()
 {
+    /**
+     * @brief Handle drawHeader.
+     */
     drawHeader("THEME", "LIVE");
     M5Cardputer.Display.fillRect(12, 35, 216, 55, uiPanel);
     M5Cardputer.Display.setTextColor(uiMuted);
@@ -719,15 +953,27 @@ void drawTheme()
     M5Cardputer.Display.setTextColor(uiMuted);
     M5Cardputer.Display.setCursor(48, 101);
     M5Cardputer.Display.print("ENTER cycles themes");
+    /**
+     * @brief Handle drawFooter.
+     */
     drawFooter("ENTER cycle   ESC back");
 }
 
+/**
+ * @brief Handle openTheme.
+ */
 void openTheme()
 {
     currentScreen = SCREEN_THEME;
+    /**
+     * @brief Handle drawTheme.
+     */
     drawTheme();
 }
 
+/**
+ * @brief Handle showWifiInfo.
+ */
 void showWifiInfo()
 {
     WiFi.mode(WIFI_STA);
@@ -748,14 +994,26 @@ void showWifiInfo()
         text += "\na saved connection.";
     }
 
+    /**
+     * @brief Handle openTool.
+     */
     openTool("WI-FI INFO", text);
 }
 
+/**
+ * @brief Handle showSecurityDashboard.
+ */
 void showSecurityDashboard()
 {
+    /**
+     * @brief Handle drawScanningScreen.
+     */
     drawScanningScreen();
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
+    /**
+     * @brief Handle delay.
+     */
     delay(150);
     WiFi.scanDelete();
     wifiNetworkCount = WiFi.scanNetworks(false, true);
@@ -780,9 +1038,15 @@ void showSecurityDashboard()
     text += "\nDuplicate names: " + String(duplicateNames);
     text += "\n\nPassive observations only.";
 
+    /**
+     * @brief Handle openTool.
+     */
     openTool("SECURITY DASHBOARD", text);
 }
 
+/**
+ * @brief Handle showDeviceInfo.
+ */
 void showDeviceInfo()
 {
     String text = String("Platform Pocket v") + APP_VERSION;
@@ -790,36 +1054,60 @@ void showDeviceInfo()
     text += "\nFree heap: " + String(ESP.getFreeHeap());
     text += "\nFlash: " + String(ESP.getFlashChipSize());
     text += "\nCores: " + String(ESP.getChipCores());
+    /**
+     * @brief Handle openTool.
+     */
     openTool("DEVICE INFO", text);
 }
 
+/**
+ * @brief Handle showDockerCommands.
+ */
 void showDockerCommands()
 {
     String text = "docker ps\n  running containers";
     text += "\n\ndocker images\n  local images";
     text += "\n\ndocker logs NAME";
     text += "\n\ndocker stop NAME";
+    /**
+     * @brief Handle openTool.
+     */
     openTool("DOCKER COMMANDS", text);
 }
 
+/**
+ * @brief Handle showContainerCheatsheet.
+ */
 void showContainerCheatsheet()
 {
     String text = "Container  running instance";
     text += "\n\nImage      template";
     text += "\n\nVolume     persistent data";
     text += "\n\nPort       host -> container";
+    /**
+     * @brief Handle openTool.
+     */
     openTool("CONTAINERS 101", text);
 }
 
+/**
+ * @brief Handle showComposeCheatsheet.
+ */
 void showComposeCheatsheet()
 {
     String text = "docker compose up -d";
     text += "\n\ncompose ps";
     text += "\n\ncompose logs";
     text += "\n\ncompose down";
+    /**
+     * @brief Handle openTool.
+     */
     openTool("COMPOSE", text);
 }
 
+/**
+ * @brief Handle showPasswordGenerator.
+ */
 void showPasswordGenerator()
 {
     const char characters[] =
@@ -828,6 +1116,9 @@ void showPasswordGenerator()
         "23456789"
         "!@#$%";
 
+    /**
+     * @brief Handle randomSeed.
+     */
     randomSeed(esp_random());
     String password = "";
     for (int i = 0; i < 16; i++)
@@ -835,9 +1126,15 @@ void showPasswordGenerator()
         password += characters[random(0, sizeof(characters) - 1)];
     }
 
+    /**
+     * @brief Handle openTool.
+     */
     openTool("PASSWORD GENERATOR", String("Generated:\n\n") + password + "\n\n16 characters");
 }
 
+/**
+ * @brief Handle showSystemInfo.
+ */
 void showSystemInfo()
 {
     String text = "CPU: " + String(getCpuFrequencyMhz()) + " MHz";
@@ -845,9 +1142,15 @@ void showSystemInfo()
     text += "\nFlash: " + String(ESP.getFlashChipSize());
     text += "\nUptime: " + String(millis() / 1000UL) + " sec";
     text += "\nSDK: " + String(ESP.getSdkVersion());
+    /**
+     * @brief Handle openTool.
+     */
     openTool("SYSTEM INFO", text);
 }
 
+/**
+ * @brief Handle showAbout.
+ */
 void showAbout()
 {
     String text = String("Platform Pocket v") + APP_VERSION;
@@ -855,9 +1158,15 @@ void showAbout()
     text += "\nfor networking, platform";
     text += "\nwork and quick diagnostics.";
     text += "\n\nUI + terminal refresh.";
+    /**
+     * @brief Handle openTool.
+     */
     openTool("ABOUT", text);
 }
 
+/**
+ * @brief Handle executeSelectedTool.
+ */
 void executeSelectedTool()
 {
     int option = selectedSubItem[selectedMainItem];
@@ -985,16 +1294,28 @@ void executeSelectedTool()
     }
 }
 
+/**
+ * @brief Handle setup.
+ */
 void setup()
 {
     auto cfg = M5.config();
     M5Cardputer.begin(cfg, true);
     M5Cardputer.Display.setRotation(1);
     M5Cardputer.Display.setBrightness(screenBrightness);
+    /**
+     * @brief Handle applyTheme.
+     */
     applyTheme();
+    /**
+     * @brief Handle drawMainMenu.
+     */
     drawMainMenu();
 }
 
+/**
+ * @brief Handle loop.
+ */
 void loop()
 {
     M5Cardputer.update();
@@ -1057,6 +1378,9 @@ void loop()
         if (screenBrightness > 255)
             screenBrightness = 255;
         M5Cardputer.Display.setBrightness(screenBrightness);
+        /**
+         * @brief Handle drawBrightness.
+         */
         drawBrightness();
         return;
     }
