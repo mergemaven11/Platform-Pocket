@@ -83,6 +83,7 @@ String nextSnapshotPath()
 
 namespace PocketStorage
 {
+/** @brief Initialize microSD persistence and create the workspace tree. */
 bool begin()
 {
     storageReady = false;
@@ -95,11 +96,13 @@ bool begin()
     return true;
 }
 
+/** @brief Report whether the SD workspace is mounted and ready. */
 bool ready()
 {
     return storageReady;
 }
 
+/** @brief Build a concise card capacity and workspace health summary. */
 String statusText()
 {
     if (!storageReady)
@@ -116,6 +119,7 @@ String statusText()
     return text;
 }
 
+/** @brief Append an operator quick note to the Markdown inbox. */
 bool appendQuickNote(const String &text)
 {
     if (!storageReady || text.length() == 0)
@@ -131,6 +135,7 @@ bool appendQuickNote(const String &text)
     return true;
 }
 
+/** @brief Summarize the persistent notes inbox for the UI or terminal. */
 String noteSummary()
 {
     if (!storageReady)
@@ -143,6 +148,7 @@ String noteSummary()
     return "Inbox: notes/inbox.md\nSize: " + String(bytes) + " bytes\n\nTerminal:\nnote TEXT\nnotes";
 }
 
+/** @brief Save current device and network state as a numbered text snapshot. */
 String saveDiagnosticSnapshot()
 {
     if (!storageReady)
@@ -175,6 +181,7 @@ String saveDiagnosticSnapshot()
     return path;
 }
 
+/** @brief Describe the stable top-level Platform Pocket workspace directories. */
 String workspaceSummary()
 {
     if (!storageReady)
