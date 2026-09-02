@@ -4,13 +4,14 @@
 #include <esp_system.h>
 #include <mbedtls/sha256.h>
 #include "storage.h"
+#include "workstation.h"
 
 // ============================================================
-// PLATFORM POCKET v0.7
+// PLATFORM POCKET v0.8
 // A compact handheld platform / network toolkit for Cardputer ADV.
 // ============================================================
 
-static const char *APP_VERSION = "0.7";
+static const char *APP_VERSION = "0.8";
 
 // 240x135 Cardputer display palette. Values are RGB565.
 uint16_t uiBg = 0x0841;
@@ -47,7 +48,8 @@ enum ScreenState
     SCREEN_WIFI_DETAILS,
     SCREEN_TERMINAL,
     SCREEN_BRIGHTNESS,
-    SCREEN_THEME
+    SCREEN_THEME,
+    SCREEN_EDITOR
 };
 
 ScreenState currentScreen = SCREEN_MAIN;
@@ -90,9 +92,9 @@ const char *dockerMenu[] = {
 const int dockerMenuCount = 4;
 
 const char *notesMenu[] = {
-    "View Notes",
-    "New Note",
-    "Delete Note",
+    "File Manager",
+    "Markdown Editor",
+    "Incident Notebook",
     "SD Storage"};
 const int notesMenuCount = 4;
 
@@ -125,6 +127,9 @@ String terminalLines[6];
 int terminalLineCount = 0;
 String lastTerminalCommand = "";
 String previousTerminalCommand = "";
+
+String editorBuffer = "";
+const size_t EDITOR_MAX_CHARS = 1024;
 
 // Forward declarations for terminal field-tool helpers.
 String formatIpv4(uint32_t value);
@@ -652,6 +657,31 @@ void drawTerminal()
     drawFooter("ENTER run   DEL edit   ESC back");
 }
 
+/** @brief Draw the full-screen Markdown note editor. */
+void drawEditor()
+{
+    drawHeader("MARKDOWN EDITOR", String(editorBuffer.length()) + "/" + EDITOR_MAX_CHARS);
+    M5Cardputer.Display.fillRect(5, 22, 230, 97, uiPanel);
+    M5Cardputer.Display.setTextColor(uiText);
+    M5Cardputer.Display.setTextSize(1);
+    M5Cardputer.Display.setCursor(8, 26);
+    String view = editorBuffer;
+    if (view.length() > 420)
+        view = view.substring(view.length() - 420);
+    M5Cardputer.Display.print(view);
+    drawFooter("ENTER save   ESC back   DEL erase");
+}
+
+/** @brief Open the persistent Markdown editor. */
+void openEditor()
+{
+    editorBuffer = PocketWorkstation::loadEditorNote();
+    if (editorBuffer.length() > EDITOR_MAX_CHARS)
+        editorBuffer = editorBuffer.substring(0, EDITOR_MAX_CHARS);
+    currentScreen = SCREEN_EDITOR;
+    drawEditor();
+}
+
 /**
  * @brief Document runTerminalCommand.
  */
@@ -679,8 +709,10 @@ void runTerminalCommand()
         terminalPush("wifi scan ip net dns HOST");
         terminalPush("port HOST PORT sha256 TEXT");
         terminalPush("cidr N base N diag sysinfo");
-        terminalPush("sd workspace note TEXT");
-        terminalPush("notes snapshot uptime version");
+        terminalPush("sd workspace note TEXT notes");
+        terminalPush("files edit snapshot diff runbooks");
+        terminalPush("runbook NAME incident ...");
+        terminalPush("troubleshoot TEXT uptime version");
     }
     else if (lower == "clear" || lower == "cls")
     {
@@ -868,6 +900,43 @@ void runTerminalCommand()
     {
         String result = PocketStorage::saveDiagnosticSnapshot();
         terminalPush(result.startsWith("!") ? result : String("saved: ") + result);
+    }
+    else if (lower == "files")
+    {
+        terminalPush(PocketWorkstation::fileManagerSummary());
+    }
+    else if (lower == "edit")
+    {
+        openEditor();
+        return;
+    }
+    else if (lower == "diff")
+    {
+        terminalPush(PocketWorkstation::compareSnapshots());
+    }
+    else if (lower == "runbooks")
+    {
+        terminalPush(PocketWorkstation::runbookSummary());
+    }
+    else if (lower.startsWith("runbook "))
+    {
+        terminalPush(PocketWorkstation::readRunbook(command.substring(8)));
+    }
+    else if (lower.startsWith("incident new "))
+    {
+        terminalPush(PocketWorkstation::createIncident(command.substring(13)));
+    }
+    else if (lower.startsWith("incident add "))
+    {
+        terminalPush(PocketWorkstation::appendIncident(command.substring(13)) ? "incident updated" : "! incident append failed");
+    }
+    else if (lower == "incident")
+    {
+        terminalPush(PocketWorkstation::incidentSummary());
+    }
+    else if (lower.startsWith("troubleshoot "))
+    {
+        terminalPush(PocketWorkstation::troubleshoot(command.substring(13)));
     }
     else if (lower == "sysinfo" || lower == "free")
     {
@@ -1293,7 +1362,7 @@ void showAbout()
     text += "\n\nESP32-S3 handheld toolkit";
     text += "\nfor networking, platform";
     text += "\nwork and quick diagnostics.";
-    text += "\n\nSD workspace + persistence.";
+    text += "\n\nPocket workstation + SD.";
     openTool("ABOUT", text);
 }
 
@@ -1370,13 +1439,13 @@ void executeSelectedTool()
         switch (option)
         {
         case 0:
-            openTool("VIEW NOTES", PocketStorage::noteSummary());
+            openTool("FILE MANAGER", PocketWorkstation::fileManagerSummary());
             break;
         case 1:
-            openTool("NEW NOTE", "Persistent quick notes are live.\n\nTerminal:\nnote your text\n\nSaved to notes/inbox.md");
+            openEditor();
             break;
         case 2:
-            openTool("DELETE NOTE", "Saved note management is\nqueued with SD support.");
+            openTool("INCIDENT NOTEBOOK", PocketWorkstation::incidentSummary());
             break;
         case 3:
             openTool("SD STORAGE", PocketStorage::statusText());
@@ -1437,6 +1506,7 @@ void setup()
     M5Cardputer.Display.setRotation(1);
     M5Cardputer.Display.setBrightness(screenBrightness);
     PocketStorage::begin();
+    PocketWorkstation::begin();
     applyTheme();
     drawMainMenu();
 }
@@ -1454,6 +1524,31 @@ void loop()
     }
 
     Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
+
+    if (currentScreen == SCREEN_EDITOR)
+    {
+        if (status.esc)
+        {
+            currentScreen = SCREEN_SECTION_MENU;
+            drawSectionMenu();
+            return;
+        }
+        if ((status.del || status.backspace) && editorBuffer.length() > 0)
+            editorBuffer.remove(editorBuffer.length() - 1);
+        for (auto key : status.word)
+        {
+            if (key >= 32 && key <= 126 && editorBuffer.length() < EDITOR_MAX_CHARS)
+                editorBuffer += key;
+        }
+        if (status.enter)
+        {
+            if (editorBuffer.length() < EDITOR_MAX_CHARS)
+                editorBuffer += '\n';
+            PocketWorkstation::saveEditorNote(editorBuffer);
+        }
+        drawEditor();
+        return;
+    }
 
     if (currentScreen == SCREEN_TERMINAL)
     {
