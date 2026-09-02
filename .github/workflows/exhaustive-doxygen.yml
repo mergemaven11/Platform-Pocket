@@ -138,6 +138,7 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
+          from pathlib import Path
           exec(Path('/tmp/doxygen_sweep.py').read_text(encoding='utf-8').split("changed = sum", 1)[0])
           missing = []
           for path in files():
