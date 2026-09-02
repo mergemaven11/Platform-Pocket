@@ -9,15 +9,16 @@ Platform Pocket is intentionally compact on-device, so the docs explain both **w
 If you want to understand Platform Pocket as a product, start with:
 
 1. [Complete Feature Guide](FEATURES.md) — every menu item and major capability, what it does, why it exists, and whether it is available today
-2. [Field Tools](FIELD_TOOLS.md) — focused reference for the v0.6 networking and diagnostic tools
+2. [SD Workspace and Persistence](STORAGE_WORKSPACE.md) — how the 64 GB-class microSD card becomes persistent notes, diagnostics, and the foundation for future incident/runbook features
+3. [Field Tools](FIELD_TOOLS.md) — focused reference for the networking and diagnostic tools
 
 If you want to understand or extend the codebase, continue with:
 
-3. [Architecture](architecture.md) — how the whole application fits together
-4. [UI and Input](ui-and-input.md) — how the Cardputer screen and keyboard are handled
-5. [Terminal](terminal.md) — how the local command console works
-6. [Adding a Tool](adding-a-tool.md) — the practical pattern for extending Platform Pocket
-7. [Build and Debug](build-and-debug.md) — how the firmware becomes something running on the device
+4. [Architecture](architecture.md) — how the whole application fits together
+5. [UI and Input](ui-and-input.md) — how the Cardputer screen and keyboard are handled
+6. [Terminal](terminal.md) — how the local command console works
+7. [Adding a Tool](adding-a-tool.md) — the practical pattern for extending Platform Pocket
+8. [Build and Debug](build-and-debug.md) — how the firmware becomes something running on the device
 
 ## What the Feature Guide answers
 
@@ -61,8 +62,10 @@ There is no desktop operating system underneath Platform Pocket. The firmware *i
 | Area | Responsibility |
 |---|---|
 | `platformio.ini` | Build environment, board target, library dependency, upload/monitor settings |
-| `src/main.cpp` | Current firmware implementation |
+| `src/main.cpp` | Current firmware implementation and UI routing |
+| `src/storage.*` | Persistent Cardputer ADV microSD workspace and storage services |
 | `docs/FEATURES.md` | Product-level feature catalog and rationale |
+| `docs/STORAGE_WORKSPACE.md` | Persistent storage architecture, commands, directories, and rationale |
 | `docs/` | Architecture, UI, terminal, extension, build, and learning material |
 | `assets/` | README/project imagery |
 
@@ -82,6 +85,7 @@ You do not need to master all of C++ before working on this project. The most im
 - event-driven keyboard input
 - drawing coordinates
 - ESP32 Wi-Fi APIs
+- microSD/SPI persistence
 - separating UI code from tool logic
 
 ## A good way to learn this repo
@@ -102,7 +106,16 @@ executeSelectedTool()
       -> drawWifiResults()
 ```
 
-Then trace the Back key in reverse. This makes the state-machine architecture click very quickly.
+For persistence, trace a quick note:
+
+```text
+Terminal: note replaced cable
+      -> runTerminalCommand()
+      -> PocketStorage::appendQuickNote(...)
+      -> /platform-pocket/notes/inbox.md
+```
+
+Then trace the Back key or filesystem path in reverse. This makes the state-machine and persistence architecture click very quickly.
 
 ## Design rule
 
