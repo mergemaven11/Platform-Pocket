@@ -25,5 +25,8 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
+      - name: Compile Cardputer ADV firmware
+        run: pio run -e cardputer-adv
+
       - name: Run native tests
         run: pio test -e native
