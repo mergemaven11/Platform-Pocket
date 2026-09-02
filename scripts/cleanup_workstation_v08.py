@@ -1,9 +1,10 @@
 from pathlib import Path
+import re
 
 p = Path('src/main.cpp')
 s = p.read_text()
 
-s = s.replace('#include "workstation.h"\n#include "workstation.h"', '#include "workstation.h"')
+s = re.sub(r'(?:#include "workstation\.h"\n)+', '#include "workstation.h"\n', s)
 
 block = '''/** @brief Draw the full-screen Markdown note editor. */
 void drawEditor()
@@ -31,14 +32,19 @@ void openEditor()
 }
 
 '''
-while s.count(block) > 1:
-    first = s.find(block)
-    second = s.find(block, first + len(block))
-    s = s[:second] + s[second + len(block):]
+first = s.find(block)
+if first >= 0:
+    tail = s[first + len(block):]
+    tail = tail.replace(block, '')
+    s = s[:first + len(block)] + tail
 
-# Repeated integration can duplicate editor globals and screen cases too.
-s = s.replace('String editorBuffer = "";\nconst size_t EDITOR_MAX_CHARS = 1024;\n\nString editorBuffer = "";\nconst size_t EDITOR_MAX_CHARS = 1024;', 'String editorBuffer = "";\nconst size_t EDITOR_MAX_CHARS = 1024;')
-s = s.replace('SCREEN_EDITOR,\n    SCREEN_EDITOR', 'SCREEN_EDITOR')
-s = s.replace('PocketWorkstation::begin();\n    PocketWorkstation::begin();', 'PocketWorkstation::begin();')
+global_block = 'String editorBuffer = "";\nconst size_t EDITOR_MAX_CHARS = 1024;\n'
+first = s.find(global_block)
+if first >= 0:
+    tail = s[first + len(global_block):]
+    tail = tail.replace(global_block, '')
+    s = s[:first + len(global_block)] + tail
+
+s = re.sub(r'(?:\s*PocketWorkstation::begin\(\);\n)+', '\n    PocketWorkstation::begin();\n', s)
 
 p.write_text(s)
