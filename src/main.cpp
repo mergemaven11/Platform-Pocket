@@ -155,8 +155,10 @@ void applyTheme()
 
 const char *getThemeName()
 {
-    if (themeIndex == 0) return "MIDNIGHT CYAN";
-    if (themeIndex == 1) return "MATRIX GREEN";
+    if (themeIndex == 0)
+        return "MIDNIGHT CYAN";
+    if (themeIndex == 1)
+        return "MATRIX GREEN";
     return "AMBER OPS";
 }
 
@@ -175,7 +177,8 @@ void drawHeader(const String &title, const String &badge = "")
     {
         M5Cardputer.Display.setTextColor(uiMuted);
         int badgeX = 236 - (badge.length() * 6);
-        if (badgeX < 150) badgeX = 150;
+        if (badgeX < 150)
+            badgeX = 150;
         M5Cardputer.Display.setCursor(badgeX, 6);
         M5Cardputer.Display.print(badge);
     }
@@ -204,8 +207,10 @@ void drawFooter(const String &hint)
 
 String truncateText(const String &value, int maxChars)
 {
-    if ((int)value.length() <= maxChars) return value;
-    if (maxChars <= 3) return value.substring(0, maxChars);
+    if ((int)value.length() <= maxChars)
+        return value;
+    if (maxChars <= 3)
+        return value.substring(0, maxChars);
     return value.substring(0, maxChars - 3) + "...";
 }
 
@@ -218,13 +223,20 @@ const char **getCurrentSubMenu()
 {
     switch (selectedMainItem)
     {
-    case MAIN_NETWORK: return networkMenu;
-    case MAIN_SECURITY: return securityMenu;
-    case MAIN_DOCKER: return dockerMenu;
-    case MAIN_NOTES: return notesMenu;
-    case MAIN_TOOLS: return toolsMenu;
-    case MAIN_SETTINGS: return settingsMenu;
-    default: return networkMenu;
+    case MAIN_NETWORK:
+        return networkMenu;
+    case MAIN_SECURITY:
+        return securityMenu;
+    case MAIN_DOCKER:
+        return dockerMenu;
+    case MAIN_NOTES:
+        return notesMenu;
+    case MAIN_TOOLS:
+        return toolsMenu;
+    case MAIN_SETTINGS:
+        return settingsMenu;
+    default:
+        return networkMenu;
     }
 }
 
@@ -232,21 +244,31 @@ int getCurrentSubMenuCount()
 {
     switch (selectedMainItem)
     {
-    case MAIN_NETWORK: return networkMenuCount;
-    case MAIN_SECURITY: return securityMenuCount;
-    case MAIN_DOCKER: return dockerMenuCount;
-    case MAIN_NOTES: return notesMenuCount;
-    case MAIN_TOOLS: return toolsMenuCount;
-    case MAIN_SETTINGS: return settingsMenuCount;
-    default: return 0;
+    case MAIN_NETWORK:
+        return networkMenuCount;
+    case MAIN_SECURITY:
+        return securityMenuCount;
+    case MAIN_DOCKER:
+        return dockerMenuCount;
+    case MAIN_NOTES:
+        return notesMenuCount;
+    case MAIN_TOOLS:
+        return toolsMenuCount;
+    case MAIN_SETTINGS:
+        return settingsMenuCount;
+    default:
+        return 0;
     }
 }
 
 const char *getSignalLabel(int rssi)
 {
-    if (rssi >= -50) return "STRONG";
-    if (rssi >= -65) return "GOOD";
-    if (rssi >= -75) return "FAIR";
+    if (rssi >= -50)
+        return "STRONG";
+    if (rssi >= -65)
+        return "GOOD";
+    if (rssi >= -75)
+        return "FAIR";
     return "WEAK";
 }
 
@@ -258,11 +280,13 @@ bool wifiIsOpen(int index)
 bool hasDuplicateSSID(int index)
 {
     String target = WiFi.SSID(index);
-    if (target.length() == 0) return false;
+    if (target.length() == 0)
+        return false;
 
     for (int i = 0; i < wifiNetworkCount; i++)
     {
-        if (i != index && WiFi.SSID(i) == target) return true;
+        if (i != index && WiFi.SSID(i) == target)
+            return true;
     }
     return false;
 }
@@ -274,14 +298,18 @@ void drawMainMenu()
     const int rowHeight = 19;
     const int visibleRows = 5;
     int first = selectedMainItem - 2;
-    if (first < 0) first = 0;
-    if (first > MAIN_COUNT - visibleRows) first = MAIN_COUNT - visibleRows;
-    if (first < 0) first = 0;
+    if (first < 0)
+        first = 0;
+    if (first > MAIN_COUNT - visibleRows)
+        first = MAIN_COUNT - visibleRows;
+    if (first < 0)
+        first = 0;
 
     for (int row = 0; row < visibleRows; row++)
     {
         int item = first + row;
-        if (item >= MAIN_COUNT) break;
+        if (item >= MAIN_COUNT)
+            break;
 
         int y = 24 + row * rowHeight;
         bool selected = item == selectedMainItem;
@@ -397,7 +425,8 @@ void drawWifiResults()
     }
 
     int finalRow = wifiScrollOffset + wifiRowsVisible;
-    if (finalRow > wifiNetworkCount) finalRow = wifiNetworkCount;
+    if (finalRow > wifiNetworkCount)
+        finalRow = wifiNetworkCount;
 
     for (int i = wifiScrollOffset; i < finalRow; i++)
     {
@@ -408,7 +437,8 @@ void drawWifiResults()
         M5Cardputer.Display.fillRect(4, y, 232, 22, bg);
 
         String ssid = WiFi.SSID(i);
-        if (ssid.length() == 0) ssid = "<hidden>";
+        if (ssid.length() == 0)
+            ssid = "<hidden>";
         ssid = truncateText(ssid, 22);
 
         M5Cardputer.Display.setTextColor(active ? uiBg : uiText);
@@ -429,46 +459,61 @@ void drawWifiResults()
 
 void drawWifiDetails()
 {
-    if (wifiNetworkCount <= 0) return;
+    if (wifiNetworkCount <= 0)
+        return;
 
     drawHeader("NETWORK DETAIL", String(selectedWifiNetwork + 1) + "/" + String(wifiNetworkCount));
     M5Cardputer.Display.fillRect(5, 24, 230, 91, uiPanel);
 
     String ssid = WiFi.SSID(selectedWifiNetwork);
-    if (ssid.length() == 0) ssid = "<hidden>";
+    if (ssid.length() == 0)
+        ssid = "<hidden>";
     int rssi = WiFi.RSSI(selectedWifiNetwork);
 
     M5Cardputer.Display.setTextSize(1);
     M5Cardputer.Display.setTextColor(uiMuted);
-    M5Cardputer.Display.setCursor(10, 30); M5Cardputer.Display.print("SSID");
+    M5Cardputer.Display.setCursor(10, 30);
+    M5Cardputer.Display.print("SSID");
     M5Cardputer.Display.setTextColor(uiText);
-    M5Cardputer.Display.setCursor(58, 30); M5Cardputer.Display.print(truncateText(ssid, 27));
+    M5Cardputer.Display.setCursor(58, 30);
+    M5Cardputer.Display.print(truncateText(ssid, 27));
 
     M5Cardputer.Display.setTextColor(uiMuted);
-    M5Cardputer.Display.setCursor(10, 45); M5Cardputer.Display.print("BSSID");
+    M5Cardputer.Display.setCursor(10, 45);
+    M5Cardputer.Display.print("BSSID");
     M5Cardputer.Display.setTextColor(uiText);
-    M5Cardputer.Display.setCursor(58, 45); M5Cardputer.Display.print(WiFi.BSSIDstr(selectedWifiNetwork));
+    M5Cardputer.Display.setCursor(58, 45);
+    M5Cardputer.Display.print(WiFi.BSSIDstr(selectedWifiNetwork));
 
     M5Cardputer.Display.setTextColor(uiMuted);
-    M5Cardputer.Display.setCursor(10, 60); M5Cardputer.Display.print("SIGNAL");
+    M5Cardputer.Display.setCursor(10, 60);
+    M5Cardputer.Display.print("SIGNAL");
     M5Cardputer.Display.setTextColor(uiText);
     M5Cardputer.Display.setCursor(58, 60);
-    M5Cardputer.Display.print(rssi); M5Cardputer.Display.print(" dBm  "); M5Cardputer.Display.print(getSignalLabel(rssi));
+    M5Cardputer.Display.print(rssi);
+    M5Cardputer.Display.print(" dBm  ");
+    M5Cardputer.Display.print(getSignalLabel(rssi));
 
     M5Cardputer.Display.setTextColor(uiMuted);
-    M5Cardputer.Display.setCursor(10, 75); M5Cardputer.Display.print("CHANNEL");
+    M5Cardputer.Display.setCursor(10, 75);
+    M5Cardputer.Display.print("CHANNEL");
     M5Cardputer.Display.setTextColor(uiText);
-    M5Cardputer.Display.setCursor(58, 75); M5Cardputer.Display.print(WiFi.channel(selectedWifiNetwork));
+    M5Cardputer.Display.setCursor(58, 75);
+    M5Cardputer.Display.print(WiFi.channel(selectedWifiNetwork));
 
     M5Cardputer.Display.setTextColor(uiMuted);
-    M5Cardputer.Display.setCursor(10, 90); M5Cardputer.Display.print("SECURITY");
+    M5Cardputer.Display.setCursor(10, 90);
+    M5Cardputer.Display.print("SECURITY");
     M5Cardputer.Display.setTextColor(wifiIsOpen(selectedWifiNetwork) ? uiWarning : uiSuccess);
-    M5Cardputer.Display.setCursor(58, 90); M5Cardputer.Display.print(wifiIsOpen(selectedWifiNetwork) ? "OPEN" : "SECURED");
+    M5Cardputer.Display.setCursor(58, 90);
+    M5Cardputer.Display.print(wifiIsOpen(selectedWifiNetwork) ? "OPEN" : "SECURED");
 
     M5Cardputer.Display.setTextColor(uiMuted);
-    M5Cardputer.Display.setCursor(10, 105); M5Cardputer.Display.print("DUP SSID");
+    M5Cardputer.Display.setCursor(10, 105);
+    M5Cardputer.Display.print("DUP SSID");
     M5Cardputer.Display.setTextColor(uiText);
-    M5Cardputer.Display.setCursor(58, 105); M5Cardputer.Display.print(hasDuplicateSSID(selectedWifiNetwork) ? "YES" : "NO");
+    M5Cardputer.Display.setCursor(58, 105);
+    M5Cardputer.Display.print(hasDuplicateSSID(selectedWifiNetwork) ? "YES" : "NO");
 
     drawFooter("ESC back");
 }
@@ -477,7 +522,8 @@ void terminalClear()
 {
     terminalLineCount = 0;
     terminalInput = "";
-    for (int i = 0; i < 6; i++) terminalLines[i] = "";
+    for (int i = 0; i < 6; i++)
+        terminalLines[i] = "";
 }
 
 void terminalPush(const String &line)
@@ -488,7 +534,8 @@ void terminalPush(const String &line)
         return;
     }
 
-    for (int i = 0; i < 5; i++) terminalLines[i] = terminalLines[i + 1];
+    for (int i = 0; i < 5; i++)
+        terminalLines[i] = terminalLines[i + 1];
     terminalLines[5] = line;
 }
 
@@ -568,7 +615,8 @@ void runTerminalCommand()
         for (int i = 0; i < showCount; i++)
         {
             String ssid = WiFi.SSID(i);
-            if (ssid.length() == 0) ssid = "<hidden>";
+            if (ssid.length() == 0)
+                ssid = "<hidden>";
             terminalPush(truncateText(ssid, 22) + " " + String(WiFi.RSSI(i)) + "dBm");
         }
         WiFi.scanDelete();
@@ -718,9 +766,12 @@ void showSecurityDashboard()
 
     for (int i = 0; i < wifiNetworkCount; i++)
     {
-        if (wifiIsOpen(i)) openNetworks++;
-        if (WiFi.SSID(i).length() == 0) hiddenNetworks++;
-        if (hasDuplicateSSID(i)) duplicateNames++;
+        if (wifiIsOpen(i))
+            openNetworks++;
+        if (WiFi.SSID(i).length() == 0)
+            hiddenNetworks++;
+        if (hasDuplicateSSID(i))
+            duplicateNames++;
     }
 
     String text = "Networks: " + String(wifiNetworkCount);
@@ -815,64 +866,121 @@ void executeSelectedTool()
     {
         switch (option)
         {
-        case 0: scanWifiNetworks(); drawWifiResults(); break;
-        case 1: showWifiInfo(); break;
-        case 2: openTool("SIGNAL MONITOR", "Live RSSI graph is queued.\n\nWi-Fi scanner already shows\nper-network signal strength."); break;
-        case 3: openTool("DNS LOOKUP", "Hostname input is queued.\n\nRequires an active Wi-Fi\nconnection to resolve DNS."); break;
-        case 4: openTool("NETWORK TOOLS", "Available in Terminal now:\n\nscan\nip\nwifi\nsysinfo\nuptime"); break;
+        case 0:
+            scanWifiNetworks();
+            drawWifiResults();
+            break;
+        case 1:
+            showWifiInfo();
+            break;
+        case 2:
+            openTool("SIGNAL MONITOR", "Live RSSI graph is queued.\n\nWi-Fi scanner already shows\nper-network signal strength.");
+            break;
+        case 3:
+            openTool("DNS LOOKUP", "Hostname input is queued.\n\nRequires an active Wi-Fi\nconnection to resolve DNS.");
+            break;
+        case 4:
+            openTool("NETWORK TOOLS", "Available in Terminal now:\n\nscan\nip\nwifi\nsysinfo\nuptime");
+            break;
         }
     }
     else if (selectedMainItem == MAIN_SECURITY)
     {
         switch (option)
         {
-        case 0: showSecurityDashboard(); break;
-        case 1: openTool("WI-FI OBSERVATIONS", "Passive checks:\n\n- Open networks\n- Hidden SSIDs\n- Duplicate SSIDs\n- Signal strength\n\nNo attacker claims."); break;
-        case 2: showDeviceInfo(); break;
-        case 3: openTool("HASH TOOL", "SHA-256 text/file hashing\nis planned for a later build."); break;
-        case 4: openTool("PORT CHECK", "Defensive port checks for\nhosts you own/administer\nare planned."); break;
+        case 0:
+            showSecurityDashboard();
+            break;
+        case 1:
+            openTool("WI-FI OBSERVATIONS", "Passive checks:\n\n- Open networks\n- Hidden SSIDs\n- Duplicate SSIDs\n- Signal strength\n\nNo attacker claims.");
+            break;
+        case 2:
+            showDeviceInfo();
+            break;
+        case 3:
+            openTool("HASH TOOL", "SHA-256 text/file hashing\nis planned for a later build.");
+            break;
+        case 4:
+            openTool("PORT CHECK", "Defensive port checks for\nhosts you own/administer\nare planned.");
+            break;
         }
     }
     else if (selectedMainItem == MAIN_DOCKER)
     {
         switch (option)
         {
-        case 0: showDockerCommands(); break;
-        case 1: showContainerCheatsheet(); break;
-        case 2: showComposeCheatsheet(); break;
-        case 3: openTool("REMOTE HOST", "Remote Linux control is the\nnext terminal milestone.\n\nCardputer's local shell is\nalready available now."); break;
+        case 0:
+            showDockerCommands();
+            break;
+        case 1:
+            showContainerCheatsheet();
+            break;
+        case 2:
+            showComposeCheatsheet();
+            break;
+        case 3:
+            openTool("REMOTE HOST", "Remote Linux control is the\nnext terminal milestone.\n\nCardputer's local shell is\nalready available now.");
+            break;
         }
     }
     else if (selectedMainItem == MAIN_NOTES)
     {
         switch (option)
         {
-        case 0: openTool("VIEW NOTES", "SD-backed notes are queued.\n\nThe redesigned shell now\nprovides keyboard input."); break;
-        case 1: openTool("NEW NOTE", "Note editor is queued for\nthe next storage pass."); break;
-        case 2: openTool("DELETE NOTE", "Saved note management is\nqueued with SD support."); break;
-        case 3: openTool("SD STORAGE", "SD capacity, free space\nand note files are queued."); break;
+        case 0:
+            openTool("VIEW NOTES", "SD-backed notes are queued.\n\nThe redesigned shell now\nprovides keyboard input.");
+            break;
+        case 1:
+            openTool("NEW NOTE", "Note editor is queued for\nthe next storage pass.");
+            break;
+        case 2:
+            openTool("DELETE NOTE", "Saved note management is\nqueued with SD support.");
+            break;
+        case 3:
+            openTool("SD STORAGE", "SD capacity, free space\nand note files are queued.");
+            break;
         }
     }
     else if (selectedMainItem == MAIN_TOOLS)
     {
         switch (option)
         {
-        case 0: openTool("IP TOOLS", "Terminal commands now include:\n\nip\nwifi\nscan\n\nMore parsers are queued."); break;
-        case 1: openTool("SUBNET HELPER", "/24 = 255.255.255.0\n/16 = 255.255.0.0\n/8  = 255.0.0.0\n\nCalculator is queued."); break;
-        case 2: openTool("BASE CONVERTER", "Decimal / binary / hex\nconversion is queued."); break;
-        case 3: showPasswordGenerator(); break;
-        case 4: showSystemInfo(); break;
+        case 0:
+            openTool("IP TOOLS", "Terminal commands now include:\n\nip\nwifi\nscan\n\nMore parsers are queued.");
+            break;
+        case 1:
+            openTool("SUBNET HELPER", "/24 = 255.255.255.0\n/16 = 255.255.0.0\n/8  = 255.0.0.0\n\nCalculator is queued.");
+            break;
+        case 2:
+            openTool("BASE CONVERTER", "Decimal / binary / hex\nconversion is queued.");
+            break;
+        case 3:
+            showPasswordGenerator();
+            break;
+        case 4:
+            showSystemInfo();
+            break;
         }
     }
     else if (selectedMainItem == MAIN_SETTINGS)
     {
         switch (option)
         {
-        case 0: openBrightness(); break;
-        case 1: openTheme(); break;
-        case 2: openTool("WI-FI SETTINGS", "Saved trusted Wi-Fi\nprofiles are planned."); break;
-        case 3: openTool("STORAGE", "Internal flash + SD status\nwill live here."); break;
-        case 4: showAbout(); break;
+        case 0:
+            openBrightness();
+            break;
+        case 1:
+            openTheme();
+            break;
+        case 2:
+            openTool("WI-FI SETTINGS", "Saved trusted Wi-Fi\nprofiles are planned.");
+            break;
+        case 3:
+            openTool("STORAGE", "Internal flash + SD status\nwill live here.");
+            break;
+        case 4:
+            showAbout();
+            break;
         }
     }
 }
@@ -940,10 +1048,14 @@ void loop()
             return;
         }
 
-        if (M5Cardputer.Keyboard.isKeyPressed(';')) screenBrightness -= 16;
-        if (M5Cardputer.Keyboard.isKeyPressed('.')) screenBrightness += 16;
-        if (screenBrightness < 16) screenBrightness = 16;
-        if (screenBrightness > 255) screenBrightness = 255;
+        if (M5Cardputer.Keyboard.isKeyPressed(';'))
+            screenBrightness -= 16;
+        if (M5Cardputer.Keyboard.isKeyPressed('.'))
+            screenBrightness += 16;
+        if (screenBrightness < 16)
+            screenBrightness = 16;
+        if (screenBrightness > 255)
+            screenBrightness = 255;
         M5Cardputer.Display.setBrightness(screenBrightness);
         drawBrightness();
         return;
@@ -972,13 +1084,15 @@ void loop()
         if (M5Cardputer.Keyboard.isKeyPressed(';'))
         {
             selectedMainItem--;
-            if (selectedMainItem < 0) selectedMainItem = MAIN_COUNT - 1;
+            if (selectedMainItem < 0)
+                selectedMainItem = MAIN_COUNT - 1;
             drawMainMenu();
         }
         else if (M5Cardputer.Keyboard.isKeyPressed('.'))
         {
             selectedMainItem++;
-            if (selectedMainItem >= MAIN_COUNT) selectedMainItem = 0;
+            if (selectedMainItem >= MAIN_COUNT)
+                selectedMainItem = 0;
             drawMainMenu();
         }
         else if (status.enter)
@@ -1009,13 +1123,15 @@ void loop()
         else if (M5Cardputer.Keyboard.isKeyPressed(';'))
         {
             selection--;
-            if (selection < 0) selection = count - 1;
+            if (selection < 0)
+                selection = count - 1;
             drawSectionMenu();
         }
         else if (M5Cardputer.Keyboard.isKeyPressed('.'))
         {
             selection++;
-            if (selection >= count) selection = 0;
+            if (selection >= count)
+                selection = 0;
             drawSectionMenu();
         }
         else if (status.enter)
@@ -1047,8 +1163,10 @@ void loop()
         if (M5Cardputer.Keyboard.isKeyPressed(';') && wifiNetworkCount > 0)
         {
             selectedWifiNetwork--;
-            if (selectedWifiNetwork < 0) selectedWifiNetwork = wifiNetworkCount - 1;
-            if (selectedWifiNetwork < wifiScrollOffset) wifiScrollOffset = selectedWifiNetwork;
+            if (selectedWifiNetwork < 0)
+                selectedWifiNetwork = wifiNetworkCount - 1;
+            if (selectedWifiNetwork < wifiScrollOffset)
+                wifiScrollOffset = selectedWifiNetwork;
             if (selectedWifiNetwork >= wifiScrollOffset + wifiRowsVisible)
                 wifiScrollOffset = selectedWifiNetwork - wifiRowsVisible + 1;
             drawWifiResults();
@@ -1056,9 +1174,12 @@ void loop()
         else if (M5Cardputer.Keyboard.isKeyPressed('.') && wifiNetworkCount > 0)
         {
             selectedWifiNetwork++;
-            if (selectedWifiNetwork >= wifiNetworkCount) selectedWifiNetwork = 0;
-            if (selectedWifiNetwork >= wifiScrollOffset + wifiRowsVisible) wifiScrollOffset++;
-            if (selectedWifiNetwork < wifiScrollOffset) wifiScrollOffset = 0;
+            if (selectedWifiNetwork >= wifiNetworkCount)
+                selectedWifiNetwork = 0;
+            if (selectedWifiNetwork >= wifiScrollOffset + wifiRowsVisible)
+                wifiScrollOffset++;
+            if (selectedWifiNetwork < wifiScrollOffset)
+                wifiScrollOffset = 0;
             drawWifiResults();
         }
         else if (status.enter)
