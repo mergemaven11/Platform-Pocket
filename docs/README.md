@@ -1,18 +1,34 @@
 # Platform Pocket Docs
 
-This folder is the learning companion to `src/main.cpp`.
+This folder is the product and learning companion to `src/main.cpp`.
 
-The firmware is intentionally compact. These docs explain the ideas that were previously carried by large comment blocks in the source code, but in a form that is easier to read, update, and follow from beginning to end.
+Platform Pocket is intentionally compact on-device, so the docs explain both **what the product does** and **how the firmware is built** without forcing someone to read the source first.
 
 ## Start here
 
-If you are new to the project, read these in order:
+If you want to understand Platform Pocket as a product, start with:
 
-1. [Architecture](architecture.md) — how the whole application fits together
-2. [UI and Input](ui-and-input.md) — how the Cardputer screen and keyboard are handled
-3. [Terminal](terminal.md) — how the local command console works
-4. [Adding a Tool](adding-a-tool.md) — the practical pattern for extending Platform Pocket
-5. [Build and Debug](build-and-debug.md) — how the firmware becomes something running on the device
+1. [Complete Feature Guide](FEATURES.md) — every menu item and major capability, what it does, why it exists, and whether it is available today
+2. [Field Tools](FIELD_TOOLS.md) — focused reference for the v0.6 networking and diagnostic tools
+
+If you want to understand or extend the codebase, continue with:
+
+3. [Architecture](architecture.md) — how the whole application fits together
+4. [UI and Input](ui-and-input.md) — how the Cardputer screen and keyboard are handled
+5. [Terminal](terminal.md) — how the local command console works
+6. [Adding a Tool](adding-a-tool.md) — the practical pattern for extending Platform Pocket
+7. [Build and Debug](build-and-debug.md) — how the firmware becomes something running on the device
+
+## What the Feature Guide answers
+
+For every user-facing feature, `FEATURES.md` explains:
+
+- **What it is** — the plain-language purpose of the feature.
+- **What it does** — the actual behavior available on the device.
+- **Why it matters** — the real troubleshooting, learning, or platform-engineering problem it helps solve.
+- **Status** — whether the feature is available in the current firmware or still planned.
+
+That distinction is important: the docs do not present planned placeholders as finished functionality.
 
 ## The 30-second mental model
 
@@ -46,7 +62,8 @@ There is no desktop operating system underneath Platform Pocket. The firmware *i
 |---|---|
 | `platformio.ini` | Build environment, board target, library dependency, upload/monitor settings |
 | `src/main.cpp` | Current firmware implementation |
-| `docs/` | Explanations, diagrams, extension guides, and learning material |
+| `docs/FEATURES.md` | Product-level feature catalog and rationale |
+| `docs/` | Architecture, UI, terminal, extension, build, and learning material |
 | `assets/` | README/project imagery |
 
 ## Core concepts worth learning
@@ -96,4 +113,8 @@ When adding something new, try to answer four questions:
 3. What function performs the work?
 4. What function draws the result?
 
-If those four answers are clear, the feature usually fits the architecture cleanly.
+Then add a fifth product question:
+
+5. **Why does this feature deserve space on a pocket-sized device?**
+
+If those answers are clear, the feature usually fits Platform Pocket cleanly.
