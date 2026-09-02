@@ -3,13 +3,14 @@
 #include <WiFiClient.h>
 #include <esp_system.h>
 #include <mbedtls/sha256.h>
+#include "storage.h"
 
 // ============================================================
-// PLATFORM POCKET v0.6
+// PLATFORM POCKET v0.7
 // A compact handheld platform / network toolkit for Cardputer ADV.
 // ============================================================
 
-static const char *APP_VERSION = "0.6";
+static const char *APP_VERSION = "0.7";
 
 // 240x135 Cardputer display palette. Values are RGB565.
 uint16_t uiBg = 0x0841;
@@ -678,7 +679,8 @@ void runTerminalCommand()
         terminalPush("wifi scan ip net dns HOST");
         terminalPush("port HOST PORT sha256 TEXT");
         terminalPush("cidr N base N diag sysinfo");
-        terminalPush("uptime docker history version");
+        terminalPush("sd workspace note TEXT");
+        terminalPush("notes snapshot uptime version");
     }
     else if (lower == "clear" || lower == "cls")
     {
@@ -838,6 +840,34 @@ void runTerminalCommand()
         terminalPush(String("heap: ") + ESP.getFreeHeap());
         terminalPush(String("minheap: ") + ESP.getMinFreeHeap());
         terminalPush(String("uptime: ") + millis() / 1000UL + " sec");
+    }
+    else if (lower == "sd")
+    {
+        terminalPush(PocketStorage::statusText());
+    }
+    else if (lower == "workspace")
+    {
+        terminalPush(PocketStorage::workspaceSummary());
+    }
+    else if (lower.startsWith("note "))
+    {
+        String text = command.substring(5);
+        text.trim();
+        if (text.length() == 0)
+            terminalPush("usage: note TEXT");
+        else if (PocketStorage::appendQuickNote(text))
+            terminalPush("note saved: notes/inbox.md");
+        else
+            terminalPush("! note save failed / SD offline");
+    }
+    else if (lower == "notes")
+    {
+        terminalPush(PocketStorage::noteSummary());
+    }
+    else if (lower == "snapshot")
+    {
+        String result = PocketStorage::saveDiagnosticSnapshot();
+        terminalPush(result.startsWith("!") ? result : String("saved: ") + result);
     }
     else if (lower == "sysinfo" || lower == "free")
     {
@@ -1263,7 +1293,7 @@ void showAbout()
     text += "\n\nESP32-S3 handheld toolkit";
     text += "\nfor networking, platform";
     text += "\nwork and quick diagnostics.";
-    text += "\n\nField tools + diagnostics.";
+    text += "\n\nSD workspace + persistence.";
     openTool("ABOUT", text);
 }
 
@@ -1340,16 +1370,16 @@ void executeSelectedTool()
         switch (option)
         {
         case 0:
-            openTool("VIEW NOTES", "SD-backed notes are queued.\n\nThe redesigned shell now\nprovides keyboard input.");
+            openTool("VIEW NOTES", PocketStorage::noteSummary());
             break;
         case 1:
-            openTool("NEW NOTE", "Note editor is queued for\nthe next storage pass.");
+            openTool("NEW NOTE", "Persistent quick notes are live.\n\nTerminal:\nnote your text\n\nSaved to notes/inbox.md");
             break;
         case 2:
             openTool("DELETE NOTE", "Saved note management is\nqueued with SD support.");
             break;
         case 3:
-            openTool("SD STORAGE", "SD capacity, free space\nand note files are queued.");
+            openTool("SD STORAGE", PocketStorage::statusText());
             break;
         }
     }
@@ -1388,7 +1418,7 @@ void executeSelectedTool()
             openTool("WI-FI SETTINGS", "Saved trusted Wi-Fi\nprofiles are planned.");
             break;
         case 3:
-            showStorageInfo();
+            openTool("STORAGE", PocketStorage::statusText() + "\n\n" + String("Heap: ") + ESP.getFreeHeap());
             break;
         case 4:
             showAbout();
@@ -1406,6 +1436,7 @@ void setup()
     M5Cardputer.begin(cfg, true);
     M5Cardputer.Display.setRotation(1);
     M5Cardputer.Display.setBrightness(screenBrightness);
+    PocketStorage::begin();
     applyTheme();
     drawMainMenu();
 }
