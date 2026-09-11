@@ -104,3 +104,26 @@ This keeps observations and before/after state together on the SD workspace.
 ## v0.8 cleanup included
 
 The v0.9 integration also removes repeated workstation command-handler and Markdown-editor input blocks that were accidentally duplicated during the v0.8 generated integration. Behavior is preserved while the main event loop and terminal parser become easier to maintain.
+
+
+## Multi-file text editor
+
+Platform Pocket v0.9 expands the original 1 KB Markdown scratchpad into an SD-backed text editor with an 8 KB working-document limit.
+
+Supported terminal workflows:
+
+```text
+textfiles
+edit
+edit maintenance.md
+new deploy-notes.txt
+saveas incident-copy.md
+```
+
+- `edit` opens the default `editor.md` file.
+- `edit NAME` opens or creates a named `.md` or `.txt` file under `/platform-pocket/notes/`.
+- `new NAME` starts an empty named document.
+- `saveas NAME` writes the current editor buffer to another named document.
+- `textfiles` lists editable note files.
+
+The editor saves when Enter inserts a newline and again when leaving with Escape. The 8 KB cap is intentionally conservative for ESP32-S3 heap stability; the SD card itself can store much larger collections of text files.

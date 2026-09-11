@@ -50,6 +50,8 @@ The docs are meant to be read alongside `src/main.cpp`: learn the concept in `/d
 - Timed DNS + TCP service probing with `probe HOST PORT`
 - Kubernetes and Git pocket references in the terminal
 - Additional offline Kubernetes, container, and incident-response runbooks
+- SD-backed multi-file text editor with an 8 KB working document limit
+- Named `.md` / `.txt` files via `edit`, `new`, `saveas`, and `textfiles`
 - v0.8 duplicate command/editor integration blocks cleaned up
 
 ---

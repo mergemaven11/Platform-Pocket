@@ -157,18 +157,110 @@ String fileManagerSummary()
     return out;
 }
 
-/** @brief Save the bounded full-screen Markdown editor buffer. */
+/** @brief Normalize a requested editor name and preserve .md/.txt intent. */
+String normalizeEditorFileName(const String &name)
+{
+    String value = name;
+    value.trim();
+    if (value.length() == 0)
+        return "editor.md";
+
+    String lower = value;
+    lower.toLowerCase();
+    String extension = ".md";
+    if (lower.endsWith(".txt"))
+    {
+        extension = ".txt";
+        value.remove(value.length() - 4);
+    }
+    else if (lower.endsWith(".md"))
+    {
+        value.remove(value.length() - 3);
+    }
+
+    String base = slugify(value);
+    if (base == "incident" && value.length() == 0)
+        base = "editor";
+    return base + extension;
+}
+
+/** @brief Return a compact list of editable note files. */
+String editorFileSummary()
+{
+    if (!PocketStorage::ready())
+        return "SD workspace offline.";
+
+    File dir = SD.open("/platform-pocket/notes");
+    if (!dir || !dir.isDirectory())
+        return "No notes directory.";
+
+    String out = "TEXT FILES";
+    int total = 0;
+    int shown = 0;
+    File entry = dir.openNextFile();
+    while (entry)
+    {
+        if (!entry.isDirectory())
+        {
+            String name = entry.name();
+            int slash = name.lastIndexOf('/');
+            if (slash >= 0)
+                name = name.substring(slash + 1);
+            String lower = name;
+            lower.toLowerCase();
+            if (lower.endsWith(".md") || lower.endsWith(".txt"))
+            {
+                ++total;
+                if (shown < 6)
+                {
+                    out += shown == 0 ? "\n" : ", ";
+                    out += name;
+                    ++shown;
+                }
+            }
+        }
+        entry.close();
+        entry = dir.openNextFile();
+    }
+    dir.close();
+
+    if (total == 0)
+        out += "\n(none)";
+    else if (total > shown)
+        out += "\n+" + String(total - shown) + " more";
+    return out;
+}
+
+/** @brief Save text to a named .md/.txt file in the notes workspace. */
+bool saveEditorFile(const String &name, const String &text)
+{
+    if (!PocketStorage::ready())
+        return false;
+    String path = String("/platform-pocket/notes/") + normalizeEditorFileName(name);
+    return writeTextFile(path, text);
+}
+
+/** @brief Load a bounded named .md/.txt file from the notes workspace. */
+String loadEditorFile(const String &name, size_t limit)
+{
+    if (!PocketStorage::ready())
+        return "";
+    String path = String("/platform-pocket/notes/") + normalizeEditorFileName(name);
+    return readTextFile(path, limit);
+}
+
+/** @brief Save to the legacy default editor file for compatibility. */
 bool saveEditorNote(const String &text)
 {
     return PocketStorage::ready() && writeTextFile(EDITOR_NOTE, text);
 }
 
-/** @brief Load the bounded Markdown editor buffer from SD. */
+/** @brief Load the legacy default editor file for compatibility. */
 String loadEditorNote()
 {
     if (!PocketStorage::ready())
         return "";
-    return readTextFile(EDITOR_NOTE, 1024);
+    return readTextFile(EDITOR_NOTE, 8192);
 }
 
 /** @brief Create and select a Markdown incident notebook. */

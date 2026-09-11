@@ -129,7 +129,9 @@ String lastTerminalCommand = "";
 String previousTerminalCommand = "";
 
 String editorBuffer = "";
-const size_t EDITOR_MAX_CHARS = 1024;
+String editorFileName = "editor.md";
+bool editorDirty = false;
+const size_t EDITOR_MAX_CHARS = 8192;
 
 
 
@@ -659,27 +661,52 @@ void drawTerminal()
     drawFooter("ENTER run   DEL edit   ESC back");
 }
 
-/** @brief Draw the full-screen Markdown note editor. */
+/** @brief Draw the SD-backed multi-file text editor. */
 void drawEditor()
 {
-    drawHeader("MARKDOWN EDITOR", String(editorBuffer.length()) + "/" + EDITOR_MAX_CHARS);
+    String badge = truncateText(editorFileName, 15);
+    if (editorDirty)
+        badge += "*";
+    drawHeader("TEXT EDITOR", badge);
     M5Cardputer.Display.fillRect(5, 22, 230, 97, uiPanel);
     M5Cardputer.Display.setTextColor(uiText);
     M5Cardputer.Display.setTextSize(1);
     M5Cardputer.Display.setCursor(8, 26);
-    String view = editorBuffer;
-    if (view.length() > 420)
-        view = view.substring(view.length() - 420);
+
+    // The editor is append-oriented on the tiny 240x135 display. Keep the
+    // in-memory document much larger than the visible window and follow the
+    // tail while the user types.
+    size_t start = editorBuffer.length() > 420 ? editorBuffer.length() - 420 : 0;
+    if (start > 0)
+    {
+        int newline = editorBuffer.indexOf('\n', start);
+        if (newline >= 0 && newline + 1 < static_cast<int>(editorBuffer.length()))
+            start = newline + 1;
+    }
+    String view = editorBuffer.substring(start);
     M5Cardputer.Display.print(view);
-    drawFooter("ENTER save   ESC back   DEL erase");
+
+    drawFooter(String(editorBuffer.length()) + "/" + EDITOR_MAX_CHARS + "  ENTER save/newline  ESC save");
 }
 
-/** @brief Open the persistent Markdown editor. */
-void openEditor()
+/** @brief Open a named .md/.txt file in the SD-backed editor. */
+void openEditor(const String &requestedName = "editor.md")
 {
-    editorBuffer = PocketWorkstation::loadEditorNote();
-    if (editorBuffer.length() > EDITOR_MAX_CHARS)
-        editorBuffer = editorBuffer.substring(0, EDITOR_MAX_CHARS);
+    editorFileName = PocketWorkstation::normalizeEditorFileName(requestedName);
+    editorBuffer = PocketWorkstation::loadEditorFile(editorFileName, EDITOR_MAX_CHARS);
+    editorBuffer.reserve(EDITOR_MAX_CHARS);
+    editorDirty = false;
+    currentScreen = SCREEN_EDITOR;
+    drawEditor();
+}
+
+/** @brief Start a new empty named text file. */
+void newEditorFile(const String &requestedName)
+{
+    editorFileName = PocketWorkstation::normalizeEditorFileName(requestedName);
+    editorBuffer = "";
+    editorBuffer.reserve(EDITOR_MAX_CHARS);
+    editorDirty = true;
     currentScreen = SCREEN_EDITOR;
     drawEditor();
 }
@@ -713,6 +740,7 @@ void runTerminalCommand()
         terminalPush("ops: health diag k8s docker git");
         terminalPush("util: sha256 cidr base uptime");
         terminalPush("sd: note notes files snapshot diff");
+        terminalPush("text: edit/new/saveas/textfiles");
         terminalPush("runbooks incident troubleshoot");
     }
     else if (lower == "clear" || lower == "cls")
@@ -906,10 +934,56 @@ void runTerminalCommand()
     {
         terminalPush(PocketWorkstation::fileManagerSummary());
     }
+    else if (lower == "textfiles")
+    {
+        terminalPush(PocketWorkstation::editorFileSummary());
+    }
     else if (lower == "edit")
     {
         openEditor();
         return;
+    }
+    else if (lower.startsWith("edit "))
+    {
+        String name = command.substring(5);
+        name.trim();
+        if (name.length() == 0)
+            terminalPush("usage: edit NAME[.md|.txt]");
+        else
+        {
+            openEditor(name);
+            return;
+        }
+    }
+    else if (lower.startsWith("new "))
+    {
+        String name = command.substring(4);
+        name.trim();
+        if (name.length() == 0)
+            terminalPush("usage: new NAME[.md|.txt]");
+        else
+        {
+            newEditorFile(name);
+            return;
+        }
+    }
+    else if (lower.startsWith("saveas "))
+    {
+        String name = command.substring(7);
+        name.trim();
+        if (name.length() == 0)
+            terminalPush("usage: saveas NAME[.md|.txt]");
+        else
+        {
+            editorFileName = PocketWorkstation::normalizeEditorFileName(name);
+            if (PocketWorkstation::saveEditorFile(editorFileName, editorBuffer))
+            {
+                editorDirty = false;
+                terminalPush(String("saved: ") + editorFileName);
+            }
+            else
+                terminalPush("! save failed / SD offline");
+        }
     }
     else if (lower == "diff")
     {
@@ -1599,22 +1673,31 @@ void loop()
     {
         if (status.esc)
         {
+            if (editorDirty)
+                PocketWorkstation::saveEditorFile(editorFileName, editorBuffer);
+            editorDirty = false;
             currentScreen = SCREEN_SECTION_MENU;
             drawSectionMenu();
             return;
         }
         if ((status.del || status.backspace) && editorBuffer.length() > 0)
+        {
             editorBuffer.remove(editorBuffer.length() - 1);
+            editorDirty = true;
+        }
         for (auto key : status.word)
         {
             if (key >= 32 && key <= 126 && editorBuffer.length() < EDITOR_MAX_CHARS)
+            {
                 editorBuffer += key;
+                editorDirty = true;
+            }
         }
         if (status.enter)
         {
             if (editorBuffer.length() < EDITOR_MAX_CHARS)
                 editorBuffer += '\n';
-            PocketWorkstation::saveEditorNote(editorBuffer);
+            editorDirty = !PocketWorkstation::saveEditorFile(editorFileName, editorBuffer);
         }
         drawEditor();
         return;
