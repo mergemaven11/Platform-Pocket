@@ -1673,8 +1673,14 @@ void loop()
     {
         if (status.esc)
         {
-            if (editorDirty)
-                PocketWorkstation::saveEditorFile(editorFileName, editorBuffer);
+            // Never discard a dirty in-memory document when the SD card is
+            // missing or a write fails. Stay in the editor with the dirty
+            // marker visible so the operator can restore storage and retry.
+            if (editorDirty && !PocketWorkstation::saveEditorFile(editorFileName, editorBuffer))
+            {
+                drawEditor();
+                return;
+            }
             editorDirty = false;
             currentScreen = SCREEN_SECTION_MENU;
             drawSectionMenu();
