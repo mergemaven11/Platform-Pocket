@@ -12,18 +12,18 @@ void tearDown()
 void test_signal_strong_range()
 {
     TEST_ASSERT_EQUAL_STRING("STRONG", getSignalLabel(-40));
-    TEST_ASSERT_EQUAL_STRING("STRONG", getSignalLabel(-55));
+    TEST_ASSERT_EQUAL_STRING("STRONG", getSignalLabel(-50));
 }
 
 void test_signal_good_range()
 {
-    TEST_ASSERT_EQUAL_STRING("GOOD", getSignalLabel(-56));
-    TEST_ASSERT_EQUAL_STRING("GOOD", getSignalLabel(-67));
+    TEST_ASSERT_EQUAL_STRING("GOOD", getSignalLabel(-51));
+    TEST_ASSERT_EQUAL_STRING("GOOD", getSignalLabel(-65));
 }
 
 void test_signal_fair_range()
 {
-    TEST_ASSERT_EQUAL_STRING("FAIR", getSignalLabel(-68));
+    TEST_ASSERT_EQUAL_STRING("FAIR", getSignalLabel(-66));
     TEST_ASSERT_EQUAL_STRING("FAIR", getSignalLabel(-75));
 }
 
