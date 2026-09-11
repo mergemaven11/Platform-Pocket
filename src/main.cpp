@@ -11,7 +11,7 @@
 // A compact handheld platform / network toolkit for Cardputer ADV.
 // ============================================================
 
-static const char *APP_VERSION = "0.8";
+static const char *APP_VERSION = "0.9";
 
 // 240x135 Cardputer display palette. Values are RGB565.
 uint16_t uiBg = 0x0841;
@@ -708,13 +708,12 @@ void runTerminalCommand()
 
     if (lower == "help" || lower == "?")
     {
-        terminalPush("wifi scan ip net dns HOST");
-        terminalPush("port HOST PORT sha256 TEXT");
-        terminalPush("cidr N base N diag sysinfo");
-        terminalPush("sd workspace note TEXT notes");
-        terminalPush("files edit snapshot diff runbooks");
-        terminalPush("runbook NAME incident ...");
-        terminalPush("troubleshoot TEXT uptime version");
+        terminalPush("net: wifi scan ip dns HOST");
+        terminalPush("svc: port/probe HOST PORT");
+        terminalPush("ops: health diag k8s docker git");
+        terminalPush("util: sha256 cidr base uptime");
+        terminalPush("sd: note notes files snapshot diff");
+        terminalPush("runbooks incident troubleshoot");
     }
     else if (lower == "clear" || lower == "cls")
     {
@@ -940,79 +939,74 @@ void runTerminalCommand()
     {
         terminalPush(PocketWorkstation::troubleshoot(command.substring(13)));
     }
-    else if (lower == "files")
+    else if (lower == "health")
     {
-        terminalPush(PocketWorkstation::fileManagerSummary());
+        terminalPush(String("wifi: ") + (WiFi.status() == WL_CONNECTED ? "connected" : "offline"));
+        if (WiFi.status() == WL_CONNECTED)
+            terminalPush(String("rssi: ") + WiFi.RSSI() + " dBm " + getSignalLabel(WiFi.RSSI()));
+        terminalPush(String("heap: ") + ESP.getFreeHeap() + " bytes");
+        terminalPush(String("minheap: ") + ESP.getMinFreeHeap() + " bytes");
+        terminalPush(String("sd: ") + (PocketStorage::ready() ? "ready" : "offline"));
+        terminalPush(String("uptime: ") + millis() / 1000UL + " sec");
     }
-    else if (lower == "edit")
+    else if (lower.startsWith("probe "))
     {
-        openEditor();
-        return;
+        if (WiFi.status() != WL_CONNECTED)
+        {
+            terminalPush("! connect to Wi-Fi first");
+        }
+        else
+        {
+            int split = command.indexOf(' ', 6);
+            if (split < 0)
+            {
+                terminalPush("usage: probe HOST PORT");
+            }
+            else
+            {
+                String host = command.substring(6, split);
+                int port = command.substring(split + 1).toInt();
+                if (host.length() == 0 || port < 1 || port > 65535)
+                {
+                    terminalPush("usage: probe HOST PORT");
+                }
+                else
+                {
+                    IPAddress resolved;
+                    unsigned long dnsStart = millis();
+                    int dnsOk = WiFi.hostByName(host.c_str(), resolved);
+                    unsigned long dnsMs = millis() - dnsStart;
+                    if (dnsOk != 1)
+                    {
+                        terminalPush("! DNS lookup failed");
+                    }
+                    else
+                    {
+                        terminalPush(String("dns ") + dnsMs + "ms " + resolved.toString());
+                        WiFiClient client;
+                        unsigned long tcpStart = millis();
+                        bool reachable = client.connect(host.c_str(), static_cast<uint16_t>(port), 1500);
+                        unsigned long tcpMs = millis() - tcpStart;
+                        terminalPush(String("tcp ") + tcpMs + "ms " + (reachable ? "OPEN" : "NO REPLY"));
+                        client.stop();
+                    }
+                }
+            }
+        }
     }
-    else if (lower == "diff")
+    else if (lower == "k8s" || lower == "kubectl")
     {
-        terminalPush(PocketWorkstation::compareSnapshots());
+        terminalPush("kubectl get pods -A");
+        terminalPush("kubectl describe pod NAME");
+        terminalPush("kubectl logs -f POD");
+        terminalPush("kubectl get events --sort-by=.metadata.creationTimestamp");
     }
-    else if (lower == "runbooks")
+    else if (lower == "git")
     {
-        terminalPush(PocketWorkstation::runbookSummary());
-    }
-    else if (lower.startsWith("runbook "))
-    {
-        terminalPush(PocketWorkstation::readRunbook(command.substring(8)));
-    }
-    else if (lower.startsWith("incident new "))
-    {
-        terminalPush(PocketWorkstation::createIncident(command.substring(13)));
-    }
-    else if (lower.startsWith("incident add "))
-    {
-        terminalPush(PocketWorkstation::appendIncident(command.substring(13)) ? "incident updated" : "! incident append failed");
-    }
-    else if (lower == "incident")
-    {
-        terminalPush(PocketWorkstation::incidentSummary());
-    }
-    else if (lower.startsWith("troubleshoot "))
-    {
-        terminalPush(PocketWorkstation::troubleshoot(command.substring(13)));
-    }
-    else if (lower == "files")
-    {
-        terminalPush(PocketWorkstation::fileManagerSummary());
-    }
-    else if (lower == "edit")
-    {
-        openEditor();
-        return;
-    }
-    else if (lower == "diff")
-    {
-        terminalPush(PocketWorkstation::compareSnapshots());
-    }
-    else if (lower == "runbooks")
-    {
-        terminalPush(PocketWorkstation::runbookSummary());
-    }
-    else if (lower.startsWith("runbook "))
-    {
-        terminalPush(PocketWorkstation::readRunbook(command.substring(8)));
-    }
-    else if (lower.startsWith("incident new "))
-    {
-        terminalPush(PocketWorkstation::createIncident(command.substring(13)));
-    }
-    else if (lower.startsWith("incident add "))
-    {
-        terminalPush(PocketWorkstation::appendIncident(command.substring(13)) ? "incident updated" : "! incident append failed");
-    }
-    else if (lower == "incident")
-    {
-        terminalPush(PocketWorkstation::incidentSummary());
-    }
-    else if (lower.startsWith("troubleshoot "))
-    {
-        terminalPush(PocketWorkstation::troubleshoot(command.substring(13)));
+        terminalPush("git status / log --oneline");
+        terminalPush("git diff / diff --staged");
+        terminalPush("git fetch / pull --ff-only");
+        terminalPush("git switch -c BRANCH");
     }
     else if (lower == "sysinfo" || lower == "free")
     {
@@ -1600,56 +1594,6 @@ void loop()
     }
 
     Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
-
-    if (currentScreen == SCREEN_EDITOR)
-    {
-        if (status.esc)
-        {
-            currentScreen = SCREEN_SECTION_MENU;
-            drawSectionMenu();
-            return;
-        }
-        if ((status.del || status.backspace) && editorBuffer.length() > 0)
-            editorBuffer.remove(editorBuffer.length() - 1);
-        for (auto key : status.word)
-        {
-            if (key >= 32 && key <= 126 && editorBuffer.length() < EDITOR_MAX_CHARS)
-                editorBuffer += key;
-        }
-        if (status.enter)
-        {
-            if (editorBuffer.length() < EDITOR_MAX_CHARS)
-                editorBuffer += '\n';
-            PocketWorkstation::saveEditorNote(editorBuffer);
-        }
-        drawEditor();
-        return;
-    }
-
-    if (currentScreen == SCREEN_EDITOR)
-    {
-        if (status.esc)
-        {
-            currentScreen = SCREEN_SECTION_MENU;
-            drawSectionMenu();
-            return;
-        }
-        if ((status.del || status.backspace) && editorBuffer.length() > 0)
-            editorBuffer.remove(editorBuffer.length() - 1);
-        for (auto key : status.word)
-        {
-            if (key >= 32 && key <= 126 && editorBuffer.length() < EDITOR_MAX_CHARS)
-                editorBuffer += key;
-        }
-        if (status.enter)
-        {
-            if (editorBuffer.length() < EDITOR_MAX_CHARS)
-                editorBuffer += '\n';
-            PocketWorkstation::saveEditorNote(editorBuffer);
-        }
-        drawEditor();
-        return;
-    }
 
     if (currentScreen == SCREEN_EDITOR)
     {

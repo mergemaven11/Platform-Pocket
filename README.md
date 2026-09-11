@@ -7,7 +7,7 @@
 
 Platform Pocket turns the Cardputer ADV into a compact handheld companion for **networking, embedded C++, platform engineering, security diagnostics, and systems work**.
 
-The v0.5 refresh focuses on making the device feel like a real product instead of a firmware demo: a compact dashboard UI, consistent screen chrome, cleaner Wi-Fi views, live themes and brightness controls, and a keyboard-driven local terminal.
+The v0.9 production-ops refresh builds on the handheld workstation with faster field diagnostics and practical platform-engineering references: a compact dashboard UI, consistent screen chrome, cleaner Wi-Fi views, live themes and brightness controls, and a keyboard-driven local terminal.
 
 <p align="center">
   <img src="assets/Platform-pocket-v0.5.png" alt="Platform Pocket project overview" width="100%">
@@ -31,7 +31,7 @@ The docs are meant to be read alongside `src/main.cpp`: learn the concept in `/d
 
 ---
 
-## ✨ v0.5 Highlights
+## ✨ v0.9 Highlights
 
 - Redesigned 240×135 handheld UI
 - Compact status/header/footer system
@@ -46,6 +46,11 @@ The docs are meant to be read alongside `src/main.cpp`: learn the concept in `/d
   - Matrix Green
   - Amber Ops
 - Input handling now uses Cardputer keyboard change events to prevent repeated held-key input
+- Production health summary with `health`
+- Timed DNS + TCP service probing with `probe HOST PORT`
+- Kubernetes and Git pocket references in the terminal
+- Additional offline Kubernetes, container, and incident-response runbooks
+- v0.8 duplicate command/editor integration blocks cleaned up
 
 ---
 
@@ -128,6 +133,10 @@ pocket> scan
 | `sysinfo` / `free` | CPU, heap, and flash information |
 | `uptime` | Show device uptime |
 | `docker` | Quick Docker / Compose reference |
+| `health` | Show Wi-Fi, RSSI, heap, SD, and uptime health |
+| `probe HOST PORT` | Resolve a host and time an authorized TCP service check |
+| `k8s` / `kubectl` | Show Kubernetes troubleshooting command references |
+| `git` | Show common Git investigation/workflow commands |
 | `history` | Show recent command information |
 | `version` | Show Platform Pocket version |
 | `echo TEXT` | Print text back to the console |
@@ -318,6 +327,6 @@ Wireless scan information is presented as observations. Duplicate names, open ne
 
 ## 📌 Status
 
-**Platform Pocket v0.5 is an active development build.**
+**Platform Pocket v0.9 is an active development build.**
 
 The redesigned UI and local terminal are implemented. Hardware flashing/testing on the target Cardputer ADV is the next validation step before merging the refresh into `main`.
