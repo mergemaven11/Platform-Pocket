@@ -60,7 +60,10 @@ void ensureRunbooks()
         {"dns.md", "# DNS failure\n1. Check IP/gateway with `net`.\n2. Resolve a known host with `dns HOST`.\n3. If IP works but names fail, inspect DNS server.\n4. Capture `snapshot` before changes.\n"},
         {"wifi.md", "# Wi-Fi weak/intermittent\n1. Check `wifi` and Signal Monitor.\n2. Compare RSSI while moving.\n3. Scan nearby channels.\n4. Capture a snapshot at good and bad locations.\n"},
         {"service.md", "# Service unreachable\n1. Confirm network with `net`.\n2. Resolve host with `dns HOST`.\n3. Test one authorized service using `port HOST PORT`.\n4. Check remote service/firewall from an authorized admin host.\n"},
-        {"memory.md", "# Device instability\n1. Run `diag`.\n2. Compare free heap and minimum heap.\n3. Check uptime for unexpected reset evidence.\n4. Save `snapshot` before reproducing.\n"}};
+        {"memory.md", "# Device instability\n1. Run `diag`.\n2. Compare free heap and minimum heap.\n3. Check uptime for unexpected reset evidence.\n4. Save `snapshot` before reproducing.\n"},
+        {"kubernetes.md", "# Kubernetes workload issue\n1. Check cluster context from an authorized admin host.\n2. Run `kubectl get pods -A`.\n3. Describe the affected pod and inspect recent events.\n4. Review logs before restarting or changing workloads.\n5. Record findings in an incident note.\n"},
+        {"container.md", "# Container service issue\n1. Confirm host/network reachability.\n2. Check container state and recent logs.\n3. Validate the published service port with `probe HOST PORT`.\n4. Capture a snapshot before making changes.\n"},
+        {"incident.md", "# Incident quick start\n1. `incident new TITLE`\n2. `health` and `snapshot`\n3. Add observations with `incident add TEXT`\n4. Use `diff` after another snapshot.\n5. Preserve evidence before remediation.\n"}};
     for (const auto &seed : seeds)
     {
         String path = String("/platform-pocket/runbooks/") + seed.name;
@@ -154,18 +157,110 @@ String fileManagerSummary()
     return out;
 }
 
-/** @brief Save the bounded full-screen Markdown editor buffer. */
+/** @brief Normalize a requested editor name and preserve .md/.txt intent. */
+String normalizeEditorFileName(const String &name)
+{
+    String value = name;
+    value.trim();
+    if (value.length() == 0)
+        return "editor.md";
+
+    String lower = value;
+    lower.toLowerCase();
+    String extension = ".md";
+    if (lower.endsWith(".txt"))
+    {
+        extension = ".txt";
+        value.remove(value.length() - 4);
+    }
+    else if (lower.endsWith(".md"))
+    {
+        value.remove(value.length() - 3);
+    }
+
+    String base = slugify(value);
+    if (base == "incident" && value.length() == 0)
+        base = "editor";
+    return base + extension;
+}
+
+/** @brief Return a compact list of editable note files. */
+String editorFileSummary()
+{
+    if (!PocketStorage::ready())
+        return "SD workspace offline.";
+
+    File dir = SD.open("/platform-pocket/notes");
+    if (!dir || !dir.isDirectory())
+        return "No notes directory.";
+
+    String out = "TEXT FILES";
+    int total = 0;
+    int shown = 0;
+    File entry = dir.openNextFile();
+    while (entry)
+    {
+        if (!entry.isDirectory())
+        {
+            String name = entry.name();
+            int slash = name.lastIndexOf('/');
+            if (slash >= 0)
+                name = name.substring(slash + 1);
+            String lower = name;
+            lower.toLowerCase();
+            if (lower.endsWith(".md") || lower.endsWith(".txt"))
+            {
+                ++total;
+                if (shown < 6)
+                {
+                    out += shown == 0 ? "\n" : ", ";
+                    out += name;
+                    ++shown;
+                }
+            }
+        }
+        entry.close();
+        entry = dir.openNextFile();
+    }
+    dir.close();
+
+    if (total == 0)
+        out += "\n(none)";
+    else if (total > shown)
+        out += "\n+" + String(total - shown) + " more";
+    return out;
+}
+
+/** @brief Save text to a named .md/.txt file in the notes workspace. */
+bool saveEditorFile(const String &name, const String &text)
+{
+    if (!PocketStorage::ready())
+        return false;
+    String path = String("/platform-pocket/notes/") + normalizeEditorFileName(name);
+    return writeTextFile(path, text);
+}
+
+/** @brief Load a bounded named .md/.txt file from the notes workspace. */
+String loadEditorFile(const String &name, size_t limit)
+{
+    if (!PocketStorage::ready())
+        return "";
+    String path = String("/platform-pocket/notes/") + normalizeEditorFileName(name);
+    return readTextFile(path, limit);
+}
+
+/** @brief Save to the legacy default editor file for compatibility. */
 bool saveEditorNote(const String &text)
 {
     return PocketStorage::ready() && writeTextFile(EDITOR_NOTE, text);
 }
 
-/** @brief Load the bounded Markdown editor buffer from SD. */
+/** @brief Load the legacy default editor file for compatibility. */
 String loadEditorNote()
 {
     if (!PocketStorage::ready())
         return "";
-    return readTextFile(EDITOR_NOTE, 1024);
+    return readTextFile(EDITOR_NOTE, 8192);
 }
 
 /** @brief Create and select a Markdown incident notebook. */
@@ -249,7 +344,7 @@ String runbookSummary()
     if (!PocketStorage::ready())
         return "SD workspace offline.";
     ensureRunbooks();
-    return "RUNBOOKS\ndns\nwifi\nservice\nmemory\n\nrunbook NAME";
+    return "RUNBOOKS\ndns wifi service memory\nkubernetes container incident\n\nrunbook NAME";
 }
 
 /** @brief Read one bundled Markdown runbook. */
@@ -276,6 +371,10 @@ String troubleshoot(const String &symptom)
         return "Check service path.\n1 net\n2 dns HOST\n3 port HOST PORT\n4 remote service/firewall\nRunbook: service";
     if (s.indexOf("reset") >= 0 || s.indexOf("memory") >= 0 || s.indexOf("crash") >= 0)
         return "Check device health.\n1 diag\n2 min heap\n3 uptime\n4 snapshot\nRunbook: memory";
+    if (s.indexOf("k8s") >= 0 || s.indexOf("kubernetes") >= 0 || s.indexOf("pod") >= 0)
+        return "Check workload path.\n1 k8s\n2 pod describe/events\n3 logs\n4 incident note\nRunbook: kubernetes";
+    if (s.indexOf("docker") >= 0 || s.indexOf("container") >= 0)
+        return "Check container path.\n1 net\n2 probe HOST PORT\n3 host logs/state\n4 snapshot\nRunbook: container";
     return "Start broad:\n1 diag\n2 net\n3 snapshot\nThen: troubleshoot dns|wifi|service|memory";
 }
 } // namespace PocketWorkstation

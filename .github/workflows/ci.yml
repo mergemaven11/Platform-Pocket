@@ -9,24 +9,59 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - name: Install PlatformIO
-        run: pip install platformio
+      - name: Install pinned PlatformIO
+        run: pip install platformio==6.2.0
 
       - name: Compile Cardputer ADV firmware
         run: pio run -e cardputer-adv
 
+      - name: Enforce firmware artifact sanity
+        run: |
+          test -s .pio/build/cardputer-adv/firmware.bin
+          test -s .pio/build/cardputer-adv/bootloader.bin
+          test -s .pio/build/cardputer-adv/partitions.bin
+          python - <<'PY'
+          from pathlib import Path
+
+          firmware = Path('.pio/build/cardputer-adv/firmware.bin')
+          size = firmware.stat().st_size
+          budget = 2_500_000
+          print(f'firmware.bin: {size:,} bytes (budget {budget:,})')
+          if size > budget:
+              raise SystemExit('firmware binary exceeded the production size budget')
+          PY
+
       - name: Run native tests
         run: pio test -e native
+
+      - name: Upload smoke-test firmware
+        uses: actions/upload-artifact@v7
+        with:
+          name: platform-pocket-cardputer-adv-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            .pio/build/cardputer-adv/firmware.bin
+            .pio/build/cardputer-adv/bootloader.bin
+            .pio/build/cardputer-adv/partitions.bin

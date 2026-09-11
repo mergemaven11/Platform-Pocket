@@ -9,16 +9,18 @@ Platform Pocket is intentionally compact on-device, so the docs explain both **w
 If you want to understand Platform Pocket as a product, start with:
 
 1. [Complete Feature Guide](FEATURES.md) — every menu item and major capability, what it does, why it exists, and whether it is available today
-2. [SD Workspace and Persistence](STORAGE_WORKSPACE.md) — how the 64 GB-class microSD card becomes persistent notes, diagnostics, and the foundation for future incident/runbook features
+2. [SD Workspace and Persistence](STORAGE_WORKSPACE.md) — how the microSD card becomes persistent notes, diagnostics, incidents, runbooks, and workstation storage
 3. [Field Tools](FIELD_TOOLS.md) — focused reference for the networking and diagnostic tools
+4. [Production Readiness](PRODUCTION.md) — automated release gates, physical Cardputer ADV smoke testing, release procedure, and rollback expectations
+5. [Production Ops Pack](PRODUCTION_OPS.md) — `health`, service probes, Kubernetes/Git references, runbooks, incident workflow, and the multi-file editor
 
 If you want to understand or extend the codebase, continue with:
 
-4. [Architecture](architecture.md) — how the whole application fits together
-5. [UI and Input](ui-and-input.md) — how the Cardputer screen and keyboard are handled
-6. [Terminal](terminal.md) — how the local command console works
-7. [Adding a Tool](adding-a-tool.md) — the practical pattern for extending Platform Pocket
-8. [Build and Debug](build-and-debug.md) — how the firmware becomes something running on the device
+6. [Architecture](architecture.md) — how the whole application fits together
+7. [UI and Input](ui-and-input.md) — how the Cardputer screen and keyboard are handled
+8. [Terminal](terminal.md) — how the local command console works
+9. [Adding a Tool](adding-a-tool.md) — the practical pattern for extending Platform Pocket
+10. [Build and Debug](build-and-debug.md) — how the firmware becomes something running on the device
 
 ## What the Feature Guide answers
 
@@ -49,6 +51,7 @@ ScreenState decides what owns input
       +---- Wi-Fi scanner
       +---- Tool page
       +---- Terminal
+      +---- Text editor
       +---- Settings screens
       |
       v
@@ -61,12 +64,15 @@ There is no desktop operating system underneath Platform Pocket. The firmware *i
 
 | Area | Responsibility |
 |---|---|
-| `platformio.ini` | Build environment, board target, library dependency, upload/monitor settings |
+| `platformio.ini` | Reproducible build environment, board target, pinned libraries, upload/monitor settings |
 | `src/main.cpp` | Current firmware implementation and UI routing |
 | `src/storage.*` | Persistent Cardputer ADV microSD workspace and storage services |
+| `src/workstation.*` | Editor files, incidents, snapshots, runbooks, and offline workstation helpers |
 | `docs/FEATURES.md` | Product-level feature catalog and rationale |
 | `docs/STORAGE_WORKSPACE.md` | Persistent storage architecture, commands, directories, and rationale |
-| `docs/` | Architecture, UI, terminal, extension, build, and learning material |
+| `docs/PRODUCTION.md` | Production gates, physical smoke test, release process, and rollback |
+| `docs/PRODUCTION_OPS.md` | Production-support commands and workflows |
+| `.github/workflows/` | CI and tagged release automation |
 | `assets/` | README/project imagery |
 
 ## Core concepts worth learning
@@ -87,6 +93,7 @@ You do not need to master all of C++ before working on this project. The most im
 - ESP32 Wi-Fi APIs
 - microSD/SPI persistence
 - separating UI code from tool logic
+- reproducible builds and release gates
 
 ## A good way to learn this repo
 

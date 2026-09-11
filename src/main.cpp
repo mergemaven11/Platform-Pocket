@@ -11,7 +11,7 @@
 // A compact handheld platform / network toolkit for Cardputer ADV.
 // ============================================================
 
-static const char *APP_VERSION = "0.8";
+static const char *APP_VERSION = "0.9";
 
 // 240x135 Cardputer display palette. Values are RGB565.
 uint16_t uiBg = 0x0841;
@@ -129,7 +129,9 @@ String lastTerminalCommand = "";
 String previousTerminalCommand = "";
 
 String editorBuffer = "";
-const size_t EDITOR_MAX_CHARS = 1024;
+String editorFileName = "editor.md";
+bool editorDirty = false;
+const size_t EDITOR_MAX_CHARS = 8192;
 
 
 
@@ -659,27 +661,52 @@ void drawTerminal()
     drawFooter("ENTER run   DEL edit   ESC back");
 }
 
-/** @brief Draw the full-screen Markdown note editor. */
+/** @brief Draw the SD-backed multi-file text editor. */
 void drawEditor()
 {
-    drawHeader("MARKDOWN EDITOR", String(editorBuffer.length()) + "/" + EDITOR_MAX_CHARS);
+    String badge = truncateText(editorFileName, 15);
+    if (editorDirty)
+        badge += "*";
+    drawHeader("TEXT EDITOR", badge);
     M5Cardputer.Display.fillRect(5, 22, 230, 97, uiPanel);
     M5Cardputer.Display.setTextColor(uiText);
     M5Cardputer.Display.setTextSize(1);
     M5Cardputer.Display.setCursor(8, 26);
-    String view = editorBuffer;
-    if (view.length() > 420)
-        view = view.substring(view.length() - 420);
+
+    // The editor is append-oriented on the tiny 240x135 display. Keep the
+    // in-memory document much larger than the visible window and follow the
+    // tail while the user types.
+    size_t start = editorBuffer.length() > 420 ? editorBuffer.length() - 420 : 0;
+    if (start > 0)
+    {
+        int newline = editorBuffer.indexOf('\n', start);
+        if (newline >= 0 && newline + 1 < static_cast<int>(editorBuffer.length()))
+            start = newline + 1;
+    }
+    String view = editorBuffer.substring(start);
     M5Cardputer.Display.print(view);
-    drawFooter("ENTER save   ESC back   DEL erase");
+
+    drawFooter(String(editorBuffer.length()) + "/" + EDITOR_MAX_CHARS + "  ENTER save/newline  ESC save");
 }
 
-/** @brief Open the persistent Markdown editor. */
-void openEditor()
+/** @brief Open a named .md/.txt file in the SD-backed editor. */
+void openEditor(const String &requestedName = "editor.md")
 {
-    editorBuffer = PocketWorkstation::loadEditorNote();
-    if (editorBuffer.length() > EDITOR_MAX_CHARS)
-        editorBuffer = editorBuffer.substring(0, EDITOR_MAX_CHARS);
+    editorFileName = PocketWorkstation::normalizeEditorFileName(requestedName);
+    editorBuffer = PocketWorkstation::loadEditorFile(editorFileName, EDITOR_MAX_CHARS);
+    editorBuffer.reserve(EDITOR_MAX_CHARS);
+    editorDirty = false;
+    currentScreen = SCREEN_EDITOR;
+    drawEditor();
+}
+
+/** @brief Start a new empty named text file. */
+void newEditorFile(const String &requestedName)
+{
+    editorFileName = PocketWorkstation::normalizeEditorFileName(requestedName);
+    editorBuffer = "";
+    editorBuffer.reserve(EDITOR_MAX_CHARS);
+    editorDirty = true;
     currentScreen = SCREEN_EDITOR;
     drawEditor();
 }
@@ -708,13 +735,13 @@ void runTerminalCommand()
 
     if (lower == "help" || lower == "?")
     {
-        terminalPush("wifi scan ip net dns HOST");
-        terminalPush("port HOST PORT sha256 TEXT");
-        terminalPush("cidr N base N diag sysinfo");
-        terminalPush("sd workspace note TEXT notes");
-        terminalPush("files edit snapshot diff runbooks");
-        terminalPush("runbook NAME incident ...");
-        terminalPush("troubleshoot TEXT uptime version");
+        terminalPush("net: wifi scan ip dns HOST");
+        terminalPush("svc: port/probe HOST PORT");
+        terminalPush("ops: health diag k8s docker git");
+        terminalPush("util: sha256 cidr base uptime");
+        terminalPush("sd: note notes files snapshot diff");
+        terminalPush("text: edit/new/saveas/textfiles");
+        terminalPush("runbooks incident troubleshoot");
     }
     else if (lower == "clear" || lower == "cls")
     {
@@ -907,10 +934,56 @@ void runTerminalCommand()
     {
         terminalPush(PocketWorkstation::fileManagerSummary());
     }
+    else if (lower == "textfiles")
+    {
+        terminalPush(PocketWorkstation::editorFileSummary());
+    }
     else if (lower == "edit")
     {
         openEditor();
         return;
+    }
+    else if (lower.startsWith("edit "))
+    {
+        String name = command.substring(5);
+        name.trim();
+        if (name.length() == 0)
+            terminalPush("usage: edit NAME[.md|.txt]");
+        else
+        {
+            openEditor(name);
+            return;
+        }
+    }
+    else if (lower.startsWith("new "))
+    {
+        String name = command.substring(4);
+        name.trim();
+        if (name.length() == 0)
+            terminalPush("usage: new NAME[.md|.txt]");
+        else
+        {
+            newEditorFile(name);
+            return;
+        }
+    }
+    else if (lower.startsWith("saveas "))
+    {
+        String name = command.substring(7);
+        name.trim();
+        if (name.length() == 0)
+            terminalPush("usage: saveas NAME[.md|.txt]");
+        else
+        {
+            editorFileName = PocketWorkstation::normalizeEditorFileName(name);
+            if (PocketWorkstation::saveEditorFile(editorFileName, editorBuffer))
+            {
+                editorDirty = false;
+                terminalPush(String("saved: ") + editorFileName);
+            }
+            else
+                terminalPush("! save failed / SD offline");
+        }
     }
     else if (lower == "diff")
     {
@@ -940,79 +1013,74 @@ void runTerminalCommand()
     {
         terminalPush(PocketWorkstation::troubleshoot(command.substring(13)));
     }
-    else if (lower == "files")
+    else if (lower == "health")
     {
-        terminalPush(PocketWorkstation::fileManagerSummary());
+        terminalPush(String("wifi: ") + (WiFi.status() == WL_CONNECTED ? "connected" : "offline"));
+        if (WiFi.status() == WL_CONNECTED)
+            terminalPush(String("rssi: ") + WiFi.RSSI() + " dBm " + getSignalLabel(WiFi.RSSI()));
+        terminalPush(String("heap: ") + ESP.getFreeHeap() + " bytes");
+        terminalPush(String("minheap: ") + ESP.getMinFreeHeap() + " bytes");
+        terminalPush(String("sd: ") + (PocketStorage::ready() ? "ready" : "offline"));
+        terminalPush(String("uptime: ") + millis() / 1000UL + " sec");
     }
-    else if (lower == "edit")
+    else if (lower.startsWith("probe "))
     {
-        openEditor();
-        return;
+        if (WiFi.status() != WL_CONNECTED)
+        {
+            terminalPush("! connect to Wi-Fi first");
+        }
+        else
+        {
+            int split = command.indexOf(' ', 6);
+            if (split < 0)
+            {
+                terminalPush("usage: probe HOST PORT");
+            }
+            else
+            {
+                String host = command.substring(6, split);
+                int port = command.substring(split + 1).toInt();
+                if (host.length() == 0 || port < 1 || port > 65535)
+                {
+                    terminalPush("usage: probe HOST PORT");
+                }
+                else
+                {
+                    IPAddress resolved;
+                    unsigned long dnsStart = millis();
+                    int dnsOk = WiFi.hostByName(host.c_str(), resolved);
+                    unsigned long dnsMs = millis() - dnsStart;
+                    if (dnsOk != 1)
+                    {
+                        terminalPush("! DNS lookup failed");
+                    }
+                    else
+                    {
+                        terminalPush(String("dns ") + dnsMs + "ms " + resolved.toString());
+                        WiFiClient client;
+                        unsigned long tcpStart = millis();
+                        bool reachable = client.connect(host.c_str(), static_cast<uint16_t>(port), 1500);
+                        unsigned long tcpMs = millis() - tcpStart;
+                        terminalPush(String("tcp ") + tcpMs + "ms " + (reachable ? "OPEN" : "NO REPLY"));
+                        client.stop();
+                    }
+                }
+            }
+        }
     }
-    else if (lower == "diff")
+    else if (lower == "k8s" || lower == "kubectl")
     {
-        terminalPush(PocketWorkstation::compareSnapshots());
+        terminalPush("kubectl get pods -A");
+        terminalPush("kubectl describe pod NAME");
+        terminalPush("kubectl logs -f POD");
+        terminalPush("kubectl get events --sort-by=.metadata.creationTimestamp");
     }
-    else if (lower == "runbooks")
+    else if (lower == "git")
     {
-        terminalPush(PocketWorkstation::runbookSummary());
-    }
-    else if (lower.startsWith("runbook "))
-    {
-        terminalPush(PocketWorkstation::readRunbook(command.substring(8)));
-    }
-    else if (lower.startsWith("incident new "))
-    {
-        terminalPush(PocketWorkstation::createIncident(command.substring(13)));
-    }
-    else if (lower.startsWith("incident add "))
-    {
-        terminalPush(PocketWorkstation::appendIncident(command.substring(13)) ? "incident updated" : "! incident append failed");
-    }
-    else if (lower == "incident")
-    {
-        terminalPush(PocketWorkstation::incidentSummary());
-    }
-    else if (lower.startsWith("troubleshoot "))
-    {
-        terminalPush(PocketWorkstation::troubleshoot(command.substring(13)));
-    }
-    else if (lower == "files")
-    {
-        terminalPush(PocketWorkstation::fileManagerSummary());
-    }
-    else if (lower == "edit")
-    {
-        openEditor();
-        return;
-    }
-    else if (lower == "diff")
-    {
-        terminalPush(PocketWorkstation::compareSnapshots());
-    }
-    else if (lower == "runbooks")
-    {
-        terminalPush(PocketWorkstation::runbookSummary());
-    }
-    else if (lower.startsWith("runbook "))
-    {
-        terminalPush(PocketWorkstation::readRunbook(command.substring(8)));
-    }
-    else if (lower.startsWith("incident new "))
-    {
-        terminalPush(PocketWorkstation::createIncident(command.substring(13)));
-    }
-    else if (lower.startsWith("incident add "))
-    {
-        terminalPush(PocketWorkstation::appendIncident(command.substring(13)) ? "incident updated" : "! incident append failed");
-    }
-    else if (lower == "incident")
-    {
-        terminalPush(PocketWorkstation::incidentSummary());
-    }
-    else if (lower.startsWith("troubleshoot "))
-    {
-        terminalPush(PocketWorkstation::troubleshoot(command.substring(13)));
+        terminalPush("git status / log --oneline");
+        terminalPush("git diff / diff --staged");
+        terminalPush("git fetch / pull --ff-only");
+        terminalPush("git switch -c BRANCH");
     }
     else if (lower == "sysinfo" || lower == "free")
     {
@@ -1605,72 +1673,37 @@ void loop()
     {
         if (status.esc)
         {
+            // Never discard a dirty in-memory document when the SD card is
+            // missing or a write fails. Stay in the editor with the dirty
+            // marker visible so the operator can restore storage and retry.
+            if (editorDirty && !PocketWorkstation::saveEditorFile(editorFileName, editorBuffer))
+            {
+                drawEditor();
+                return;
+            }
+            editorDirty = false;
             currentScreen = SCREEN_SECTION_MENU;
             drawSectionMenu();
             return;
         }
         if ((status.del || status.backspace) && editorBuffer.length() > 0)
+        {
             editorBuffer.remove(editorBuffer.length() - 1);
+            editorDirty = true;
+        }
         for (auto key : status.word)
         {
             if (key >= 32 && key <= 126 && editorBuffer.length() < EDITOR_MAX_CHARS)
+            {
                 editorBuffer += key;
+                editorDirty = true;
+            }
         }
         if (status.enter)
         {
             if (editorBuffer.length() < EDITOR_MAX_CHARS)
                 editorBuffer += '\n';
-            PocketWorkstation::saveEditorNote(editorBuffer);
-        }
-        drawEditor();
-        return;
-    }
-
-    if (currentScreen == SCREEN_EDITOR)
-    {
-        if (status.esc)
-        {
-            currentScreen = SCREEN_SECTION_MENU;
-            drawSectionMenu();
-            return;
-        }
-        if ((status.del || status.backspace) && editorBuffer.length() > 0)
-            editorBuffer.remove(editorBuffer.length() - 1);
-        for (auto key : status.word)
-        {
-            if (key >= 32 && key <= 126 && editorBuffer.length() < EDITOR_MAX_CHARS)
-                editorBuffer += key;
-        }
-        if (status.enter)
-        {
-            if (editorBuffer.length() < EDITOR_MAX_CHARS)
-                editorBuffer += '\n';
-            PocketWorkstation::saveEditorNote(editorBuffer);
-        }
-        drawEditor();
-        return;
-    }
-
-    if (currentScreen == SCREEN_EDITOR)
-    {
-        if (status.esc)
-        {
-            currentScreen = SCREEN_SECTION_MENU;
-            drawSectionMenu();
-            return;
-        }
-        if ((status.del || status.backspace) && editorBuffer.length() > 0)
-            editorBuffer.remove(editorBuffer.length() - 1);
-        for (auto key : status.word)
-        {
-            if (key >= 32 && key <= 126 && editorBuffer.length() < EDITOR_MAX_CHARS)
-                editorBuffer += key;
-        }
-        if (status.enter)
-        {
-            if (editorBuffer.length() < EDITOR_MAX_CHARS)
-                editorBuffer += '\n';
-            PocketWorkstation::saveEditorNote(editorBuffer);
+            editorDirty = !PocketWorkstation::saveEditorFile(editorFileName, editorBuffer);
         }
         drawEditor();
         return;
