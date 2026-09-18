@@ -3,6 +3,11 @@
 
 # ⚡ Platform Pocket
 
+[![Last Commit](https://img.shields.io/github/last-commit/mergemaven11/Platform-Pocket)](https://github.com/mergemaven11/Platform-Pocket/commits/main)
+![C++](https://img.shields.io/badge/C%2B%2B-ESP32--S3-00599C?logo=cplusplus&logoColor=white)
+![PlatformIO](https://img.shields.io/badge/PlatformIO-Embedded-F5822A?logo=platformio&logoColor=white)
+![License](https://img.shields.io/badge/License-Proprietary-444)
+
 > A pocket-sized ESP32-S3 platform engineering toolkit for networking, security diagnostics, Docker reference tools, a local command console, notes, and system utilities — built for the M5Stack Cardputer ADV.
 
 Platform Pocket turns the Cardputer ADV into a compact handheld companion for **networking, embedded C++, platform engineering, security diagnostics, and systems work**.
